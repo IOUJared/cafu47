@@ -3,8 +3,7 @@ const TWITCH_CONFIG = {
     domains: [
         'cafu47.com',
         'www.cafu47.com',
-        'localhost', 
-        '127.0.0.1'
+        'cafu47.pages.dev'
     ],
     video: {
         autoplay: false,
