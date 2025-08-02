@@ -46,3 +46,87 @@ html, body {
     height: 100%;
     border: none;
 }
+
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .video-panel {
+        height: 60%;
+        min-width: 100%;
+        width: 100% !important;
+    }
+    
+    .chat-panel {
+        height: 40%;
+        width: 100% !important;
+        min-width: 100%;
+    }
+    
+    .splitter {
+        width: 100% !important;
+        height: 8px !important;
+        cursor: row-resize !important;
+    }
+    
+    .splitter::before {
+        width: 30px !important;
+        height: 2px !important;
+    }
+    
+    /* Hide chat on very small screens by default */
+    .mobile-hide-chat .chat-panel,
+    .mobile-hide-chat .splitter {
+        display: none;
+    }
+    
+    .mobile-hide-chat .video-panel {
+        height: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .video-panel {
+        height: 70%;
+    }
+    
+    .chat-panel {
+        height: 30%;
+    }
+}
+
+/* Touch-friendly controls */
+@media (hover: none) and (pointer: coarse) {
+    .splitter {
+        background: #555 !important; /* Always visible on touch */
+    }
+    
+    .splitter::before {
+        background: #fff !important;
+    }
+}
+.mobile-only {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+    
+    #mobile-chat-toggle {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        cursor: pointer;
+    }
+}
