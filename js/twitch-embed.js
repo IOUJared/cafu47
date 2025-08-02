@@ -44,8 +44,9 @@ class TwitchEmbed {
         const chatFrame = document.getElementById('twitch-chat');
         const parentParams = this.config.domains.map(domain => `parent=${domain}`).join('&');
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
-        
-        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?${parentParams}${darkMode}`;
+    
+        // Use the embed-specific chat URL instead
+        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?${parentParams}${darkMode}&migration=1`;
     }
 
     changeChannel(newChannel) {
