@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Stream Viewer</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/splitter.css">
+</head>
+<body>
+    <div class="container">
+        <div class="video-panel">
+            <div id="twitch-video"></div>
+        </div>
+        
+        <div class="splitter" id="splitter"></div>
+        
+        <div class="chat-panel" id="chat-panel">
+            <iframe id="twitch-chat" allowfullscreen></iframe>
+        </div>
+    </div>
+    
+    <script src="https://embed.twitch.tv/embed/v1.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/twitch-embed.js"></script>
+    <script src="js/splitter.js"></script>
+</body>
+</html>
