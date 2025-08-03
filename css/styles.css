@@ -5,12 +5,36 @@ html, body {
     padding: 0;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* iOS Safari viewport fixes */
+    -webkit-overflow-scrolling: touch;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    /* Ensure full viewport usage on iOS */
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
 .container {
     display: flex;
     width: 100vw;
     height: 100vh;
+    /* Use dynamic viewport units for better mobile support */
+    width: 100dvw;
+    height: 100dvh;
+    /* Fallback to viewport units that account for safe areas */
+    width: 100vw;
+    height: 100vh;
+    /* For iOS Safari safe area support */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Ensure container fills screen edge to edge */
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
 }
 
 .video-panel {
@@ -102,6 +126,19 @@ html, body {
 
 /* Mobile-specific styles */
 @media screen and (max-width: 768px) {
+    /* Remove any potential white bars by ensuring full coverage */
+    html, body {
+        background: #000 !important;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+    
+    .container {
+        min-height: 100vh;
+        min-height: 100dvh;
+        background: #000;
+    }
+    
     /* Portrait mode - video on top, chat below */
     .container {
         flex-direction: column;
@@ -111,12 +148,18 @@ html, body {
         height: 60%;
         min-width: 100%;
         width: 100% !important;
+        background: #000;
+        /* Extend into safe areas for seamless appearance */
+        margin-left: calc(-1 * env(safe-area-inset-left));
+        margin-right: calc(-1 * env(safe-area-inset-right));
+        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
     }
     
     .chat-panel {
         height: 40%;
         width: 100% !important;
         min-width: 100%;
+        background: #000;
     }
     
     .splitter {
@@ -138,6 +181,13 @@ html, body {
     
     .mobile-hide-chat .video-panel {
         height: 100%;
+        /* Extend into safe areas for full-screen video */
+        margin-left: calc(-1 * env(safe-area-inset-left));
+        margin-right: calc(-1 * env(safe-area-inset-right));
+        margin-top: calc(-1 * env(safe-area-inset-top));
+        margin-bottom: calc(-1 * env(safe-area-inset-bottom));
+        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
+        height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
     }
     
     /* On mobile, video wrapper should fill available space */
@@ -155,6 +205,10 @@ html, body {
 @media screen and (max-width: 768px) and (orientation: landscape) {
     .container {
         flex-direction: row !important;
+        /* Extend into safe areas for landscape */
+        margin-left: calc(-1 * env(safe-area-inset-left));
+        margin-right: calc(-1 * env(safe-area-inset-right));
+        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
     }
     
     .video-panel {
@@ -162,6 +216,10 @@ html, body {
         height: 100% !important;
         width: auto !important;
         min-width: 300px;
+        /* Reset margins for landscape */
+        margin-left: 0;
+        margin-right: 0;
+        width: auto;
     }
     
     .chat-panel {
