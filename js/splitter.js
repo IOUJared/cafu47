@@ -7,14 +7,12 @@ export class ResizableSplitter {
         this.twitchEmbed = twitchEmbed;
         this.state = {
             isResizing: false,
-            isMobile: Utils.isMobile(),
-            isLandscape: Utils.isLandscape(),
             animationFrameId: null
         };
         
         this._initElements();
         this._bindEvents();
-        this._handleResize();
+        this._applyInitialLayout();
     }
 
     _initElements() {
@@ -39,39 +37,43 @@ export class ResizableSplitter {
         
         document.addEventListener('selectstart', (e) => this._preventSelection(e));
         
-        const debouncedResize = Utils.debounce(() => this._handleResize(), 100);
+        const debouncedResize = Utils.debounce(() => this._handleResize(), 150);
         window.addEventListener('resize', debouncedResize);
-        
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => this._handleResize(), CONSTANTS.UI_DELAYS.ORIENTATION_CHANGE);
-        });
+        window.addEventListener('orientationchange', () => this._handleResize());
     }
 
     _handleResize() {
-        const prevState = { ...this.state };
-        this.state.isMobile = Utils.isMobile();
-        this.state.isLandscape = Utils.isLandscape();
-        
-        if (prevState.isMobile !== this.state.isMobile || (this.state.isMobile && prevState.isLandscape !== this.state.isLandscape)) {
-            this._resetLayout();
-        }
+        this._applyInitialLayout();
         if (this.twitchEmbed) {
             this.twitchEmbed.maintainAspectRatio();
         }
     }
-
-    _resetLayout() {
+    
+    _applyInitialLayout() {
         const { chatPanel, videoPanel } = this.elements;
+        const isMobile = Utils.isMobile();
+        const isLandscape = Utils.isLandscape();
+
+        // Reset styles to allow flexbox to take over
         videoPanel.style.flex = '';
         chatPanel.style.flex = '';
         chatPanel.style.width = '';
-        videoPanel.style.height = '';
         chatPanel.style.height = '';
+
+        if (isMobile && isLandscape) {
+            chatPanel.style.flex = `0 0 ${this.config.splitter.mobileLandscape.defaultChatWidth}px`;
+        } else if (isMobile && !isLandscape) {
+            // In portrait, video panel takes 60% and chat takes 40%
+            videoPanel.style.flex = '0 0 60%';
+        } else {
+             chatPanel.style.flex = `0 0 ${this.config.splitter.defaultChatWidth}px`;
+        }
     }
 
     _startResize(e) {
         this.state.isResizing = true;
         document.body.classList.add('dragging');
+        this.elements.container.classList.add('resizing');
         e.preventDefault();
     }
 
@@ -84,7 +86,8 @@ export class ResizableSplitter {
 
         this.state.animationFrameId = window.requestAnimationFrame(() => {
             const coords = this._getEventCoords(e);
-            const { isMobile, isLandscape } = this.state;
+            const isMobile = Utils.isMobile();
+            const isLandscape = Utils.isLandscape();
             
             if (isMobile && !isLandscape) {
                 this._resizeMobilePortrait(coords.y);
@@ -110,13 +113,12 @@ export class ResizableSplitter {
     _resizeMobilePortrait(clientY) {
         const { container, videoPanel, chatPanel } = this.elements;
         const rect = container.getBoundingClientRect();
-        const splitterHeight = CONSTANTS.SPLITTER.HEIGHT;
         const mouseY = clientY - rect.top;
 
         const minVideo = this.config.splitter.minVideoHeight;
         const minChat = this.config.splitter.minChatHeight;
 
-        let newVideoHeight = Math.max(minVideo, Math.min(mouseY, rect.height - minChat - splitterHeight));
+        let newVideoHeight = Math.max(minVideo, Math.min(mouseY, rect.height - minChat));
         
         videoPanel.style.flex = `0 0 ${newVideoHeight}px`;
         chatPanel.style.flex = '1 1 auto';
@@ -125,15 +127,15 @@ export class ResizableSplitter {
     _resizeHorizontal(clientX) {
         const { container, videoPanel, chatPanel } = this.elements;
         const rect = container.getBoundingClientRect();
-        const splitterWidth = CONSTANTS.SPLITTER.WIDTH;
         
-        const { isMobile, isLandscape } = this.state;
+        const isMobile = Utils.isMobile();
+        const isLandscape = Utils.isLandscape();
         const config = this.config.splitter;
         const minVideo = isMobile && isLandscape ? config.mobileLandscape.minVideoWidth : config.minVideoWidth;
         const minChat = isMobile && isLandscape ? config.mobileLandscape.minChatWidth : config.minChatWidth;
 
-        let newChatWidth = rect.width - (clientX - rect.left) - (splitterWidth / 2);
-        newChatWidth = Math.max(minChat, Math.min(newChatWidth, rect.width - minVideo - splitterWidth));
+        let newChatWidth = rect.width - (clientX - rect.left);
+        newChatWidth = Math.max(minChat, Math.min(newChatWidth, rect.width - minVideo));
 
         videoPanel.style.flex = '1 1 auto';
         chatPanel.style.flex = `0 0 ${newChatWidth}px`;
@@ -143,6 +145,7 @@ export class ResizableSplitter {
         if (this.state.isResizing) {
             this.state.isResizing = false;
             document.body.classList.remove('dragging');
+            this.elements.container.classList.remove('resizing');
 
             if (this.state.animationFrameId) {
                 window.cancelAnimationFrame(this.state.animationFrameId);

@@ -1,78 +1,81 @@
 /* css/splitter.css */
 
 .splitter {
-    width: 6px;
+    flex-shrink: 0;
     background-color: var(--md-background-color);
-    cursor: col-resize;
     position: relative;
     user-select: none;
-    transition: background-color 0.2s ease;
+    -webkit-user-select: none;
     touch-action: none;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10;
+    transition: background-color 0.2s ease;
 }
 
 .splitter::before {
     content: '';
     position: absolute;
-    width: 2px;
-    height: 40px;
     background-color: var(--md-border-color);
-    border-radius: 1px;
+    border-radius: 2px;
     transition: background-color 0.2s ease;
 }
 
-.splitter:hover::before {
+.splitter:hover::before,
+.container.resizing .splitter::before {
     background-color: var(--md-primary-color);
 }
 
-/* Dragging state */
-.dragging {
-    cursor: col-resize !important;
+/* Default (Desktop) */
+.splitter {
+    width: 8px;
+    cursor: col-resize;
 }
-
-.dragging * {
-    pointer-events: none;
-    user-select: none;
+.splitter::before {
+    width: 4px;
+    height: 40px;
 }
 
 /* Mobile (Portrait) */
-@media screen and (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 768px) and (orientation: portrait) {
     .splitter {
         width: 100%;
-        height: 24px; /* Increased height for a larger touch target */
+        height: 16px; /* Larger touch area */
         cursor: row-resize;
-        background-color: rgba(0, 0, 0, 0.2); 
     }
-
     .splitter::before {
-        width: 36px;
+        width: 40px;
         height: 4px;
-        background-color: rgba(255, 255, 255, 0.2);
     }
-    
-    .splitter:hover::before {
-        background-color: var(--md-primary-color);
-    }
+}
 
+/* Mobile (Landscape) */
+@media (max-width: 768px) and (orientation: landscape) {
+    .splitter {
+        width: 16px; /* Larger touch area */
+        height: 100%;
+        cursor: col-resize;
+    }
+    .splitter::before {
+        width: 4px;
+        height: 40px;
+    }
+}
+
+
+/* Make content unselectable while dragging */
+.dragging {
+    cursor: col-resize !important;
+}
+@media (max-width: 768px) and (orientation: portrait) {
     .dragging {
         cursor: row-resize !important;
     }
 }
 
-/* Mobile (Landscape) */
-@media screen and (max-width: 768px) and (orientation: landscape) {
-    .splitter {
-        width: 24px; /* Make it a larger touch target in landscape too */
-        height: 100%;
-        cursor: col-resize;
-        background-color: rgba(0, 0, 0, 0.2);
-    }
-    
-    .splitter::before {
-        width: 4px;
-        height: 36px;
-        background-color: rgba(255, 255, 255, 0.2);
-    }
+.dragging * {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
