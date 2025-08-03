@@ -74,7 +74,7 @@ export class TwitchEmbed {
 
     async _checkMainChannelAndSwitch() {
         try {
-            const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}`);
+            const response = await fetch(`/get-live-streams?channel=${this.mainChannel}`);
             
             if (!response.ok) {
                 console.error('Failed to check main channel status:', response.status, response.statusText);
@@ -116,7 +116,7 @@ export class TwitchEmbed {
 
         try {
             const familyQuery = TWITCH_CONFIG.fuFamily.join(',');
-            const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
+            const response = await fetch(`/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
             
             if (!response.ok) {
                 console.error('Server error:', response.status, response.statusText);

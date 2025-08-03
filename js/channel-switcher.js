@@ -39,7 +39,7 @@ export class ChannelSwitcher {
         this.elements.suggestionsContainer.innerHTML = '';
         
         try {
-            const apiEndpoint = '/functions/get-live-streams';
+            const apiEndpoint = '/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
             if (!response.ok) {
