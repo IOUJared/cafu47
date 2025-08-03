@@ -3,6 +3,7 @@ class ResizableSplitter {
         this.config = config;
         this.isResizing = false;
         this.isMobile = window.innerWidth <= config.mobile.breakpoint;
+        this.isLandscape = window.innerWidth > window.innerHeight;
         this.startY = 0;
         this.startX = 0;
         this.initElements();
@@ -30,23 +31,44 @@ class ResizableSplitter {
         
         document.addEventListener('selectstart', (e) => this.preventSelection(e));
         window.addEventListener('resize', () => this.handleResize());
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.handleResize(), 100);
+        });
     }
 
     handleResize() {
         const wasMobile = this.isMobile;
-        this.isMobile = window.innerWidth <= this.config.mobile.breakpoint;
+        const wasLandscape = this.isLandscape;
         
-        // If switching between mobile/desktop, reset layout
-        if (wasMobile !== this.isMobile) {
-            if (this.isMobile) {
+        this.isMobile = window.innerWidth <= this.config.mobile.breakpoint;
+        this.isLandscape = window.innerWidth > window.innerHeight;
+        
+        // If switching between mobile/desktop or portrait/landscape, reset layout
+        if (wasMobile !== this.isMobile || (this.isMobile && wasLandscape !== this.isLandscape)) {
+            this.resetLayout();
+        }
+    }
+
+    resetLayout() {
+        if (this.isMobile) {
+            if (this.isLandscape) {
+                // Mobile landscape - side by side like desktop
+                this.chatPanel.style.height = '';
+                this.videoPanel.style.height = '';
+                this.chatPanel.style.width = '280px';
+            } else {
+                // Mobile portrait - stacked
                 this.chatPanel.style.width = '';
                 this.chatPanel.style.height = '';
                 this.videoPanel.style.height = '';
-            } else {
-                this.chatPanel.style.height = '';
-                this.videoPanel.style.height = '';
-                this.chatPanel.style.width = this.config.splitter.defaultChatWidth + 'px';
             }
+        } else {
+            // Desktop - side by side
+            this.chatPanel.style.height = '';
+            this.videoPanel.style.height = '';
+            this.chatPanel.style.width = this.config.splitter.defaultChatWidth + 'px';
         }
     }
 
@@ -67,7 +89,7 @@ class ResizableSplitter {
 
     resize(e) {
         if (!this.isResizing) return;
-
+        
         let clientY, clientX;
         if (e.type === 'touchmove') {
             clientY = e.touches[0].clientY;
@@ -77,16 +99,18 @@ class ResizableSplitter {
             clientX = e.clientX;
         }
 
-        if (this.isMobile) {
-            this.resizeMobile(clientY);
+        if (this.isMobile && !this.isLandscape) {
+            // Mobile portrait - vertical resize
+            this.resizeMobilePortrait(clientY);
         } else {
-            this.resizeDesktop(clientX);
+            // Desktop or mobile landscape - horizontal resize
+            this.resizeHorizontal(clientX);
         }
         
         e.preventDefault();
     }
 
-    resizeMobile(clientY) {
+    resizeMobilePortrait(clientY) {
         const containerRect = this.container.getBoundingClientRect();
         const containerHeight = containerRect.height;
         const splitterHeight = 8;
@@ -107,7 +131,7 @@ class ResizableSplitter {
         this.chatPanel.style.height = chatHeightPercent + '%';
     }
 
-    resizeDesktop(clientX) {
+    resizeHorizontal(clientX) {
         const containerRect = this.container.getBoundingClientRect();
         const mouseX = clientX - containerRect.left;
         const containerWidth = containerRect.width;
@@ -115,8 +139,10 @@ class ResizableSplitter {
         
         let newChatWidth = containerWidth - mouseX - splitterWidth;
         
-        const minChatWidth = this.config.splitter.minChatWidth;
-        const maxChatWidth = containerWidth - this.config.splitter.minVideoWidth - splitterWidth;
+        // Adjust minimum widths for mobile landscape
+        const minChatWidth = this.isMobile && this.isLandscape ? 150 : this.config.splitter.minChatWidth;
+        const minVideoWidth = this.isMobile && this.isLandscape ? 250 : this.config.splitter.minVideoWidth;
+        const maxChatWidth = containerWidth - minVideoWidth - splitterWidth;
         
         newChatWidth = Math.max(minChatWidth, Math.min(maxChatWidth, newChatWidth));
         this.chatPanel.style.width = newChatWidth + 'px';

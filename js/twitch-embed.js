@@ -82,12 +82,23 @@ class TwitchEmbed {
         if (!videoWrapper) return;
 
         const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        // Mobile landscape: let video fill container without aspect ratio constraints
+        if (isMobile && isLandscape) {
+            videoWrapper.style.width = '';
+            videoWrapper.style.height = '';
+            return;
+        }
+        
+        // Mobile portrait: let CSS handle the aspect ratio
+        if (isMobile && !isLandscape) {
             videoWrapper.style.width = '';
             videoWrapper.style.height = '';
             return;
         }
 
+        // Desktop: calculate aspect ratio for dynamic sizing
         const videoPanel = document.querySelector('.video-panel');
         if (!videoPanel) return;
 
