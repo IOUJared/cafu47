@@ -188,6 +188,9 @@ export class TwitchEmbed {
                 this.statusMonitorCleanup();
             }
             this.statusMonitorCleanup = this.streamStatus.monitorPlayer(this.player);
+
+            // **FIX:** Check initial status only after the player is fully ready.
+            setTimeout(() => this._checkInitialStatus(), CONSTANTS.STREAM_STATUS.INITIAL_CHECK_DELAY);
         });
 
         this.embed.addEventListener(Twitch.Embed.VIDEO_PLAY, () => {
@@ -197,8 +200,6 @@ export class TwitchEmbed {
         this.embed.addEventListener(Twitch.Player.OFFLINE, () => {
             this.streamStatus.setOffline();
         });
-
-        setTimeout(() => this._checkInitialStatus(), CONSTANTS.STREAM_STATUS.INITIAL_CHECK_DELAY);
     }
 
     _checkInitialStatus() {
