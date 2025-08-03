@@ -2,7 +2,7 @@
   This file defines custom HTTP headers for your Cloudflare Pages site.
 */
 
-/* The path to apply these headers to. '/*' means all pages. */
+/* The path to apply these headers to. /* means all pages. */
 /*
   # Security-focused headers
   X-Frame-Options: SAMEORIGIN
@@ -10,15 +10,16 @@
   Referrer-Policy: strict-origin-when-cross-origin
 
   # Permissions Policy for embedded features
-  Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv")
+  # This version correctly allows both the video and chat frames to use required permissions.
+  Permissions-Policy: autoplay=(self https://player.twitch.tv), fullscreen=(self https://player.twitch.tv https://www.twitch.tv)
 
   # Content Security Policy (CSP)
-  # This version adds cloudflareinsights.com to connect-src to allow the beacon to work.
+  # This version adds the domains needed for Twitch's analytics, ads, and other third-party scripts.
   Content-Security-Policy:
     default-src 'self';
-    script-src 'self' https://embed.twitch.tv https://static.cloudflareinsights.com;
+    script-src 'self' https:;
     style-src 'self' 'unsafe-inline';
     frame-src 'self' https://player.twitch.tv https://www.twitch.tv;
-    connect-src 'self' https://*.twitch.tv wss://*.twitch.tv https://*.twitchcdn.net https://api.twitch.tv https://sentry.io https://static.cloudflareinsights.com;
-    img-src 'self' data: https://static-cdn.jtvnw.net https://*.twitch.tv;
-    media-src blob: https://*.twitchcdn.net;
+    connect-src 'self' https: wss:;
+    img-src 'self' data: https:;
+    media-src blob: https:;
