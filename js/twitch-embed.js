@@ -4,10 +4,26 @@ class TwitchEmbed {
         this.showChat = showChat;
         this.embed = null;
         this.player = null;
+        this.streamStatus = new StreamStatusManager();
+        this.channelSwitcher = null;
+        this.statusMonitorCleanup = null;
+
+        this.setupStatusHandling();
+    }
+
+    setupStatusHandling() {
+        this.streamStatus.onStatusChange((status) => {
+            if (status === 'offline') {
+                this.showChannelSwitcher();
+            } else {
+                this.hideChannelSwitcher();
+            }
+        });
     }
 
     init() {
         this.setupLayout();
+        this.maintainAspectRatio();
         this.createVideoEmbed();
         if (this.showChat) {
             this.createChatEmbed();
@@ -23,41 +39,47 @@ class TwitchEmbed {
     }
 
     setupAspectRatioMaintenance() {
-        // Update video size when window resizes or splitter moves
         const updateVideoSize = () => {
             this.maintainAspectRatio();
         };
 
         window.addEventListener('resize', updateVideoSize);
-        
-        // Watch for splitter changes
+
         const observer = new MutationObserver(updateVideoSize);
         const chatPanel = document.getElementById('chat-panel');
-        observer.observe(chatPanel, { 
-            attributes: true, 
-            attributeFilter: ['style'] 
-        });
+        if (chatPanel) {
+            observer.observe(chatPanel, {
+                attributes: true,
+                attributeFilter: ['style']
+            });
+        }
     }
 
     maintainAspectRatio() {
-        const videoPanel = document.querySelector('.video-panel');
         const videoWrapper = document.querySelector('.video-wrapper');
-        
-        if (!videoPanel || !videoWrapper) return;
-        
+        if (!videoWrapper) return;
+
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            videoWrapper.style.width = '';
+            videoWrapper.style.height = '';
+            return;
+        }
+
+        const videoPanel = document.querySelector('.video-panel');
+        if (!videoPanel) return;
+
         const panelRect = videoPanel.getBoundingClientRect();
         const panelWidth = panelRect.width;
         const panelHeight = panelRect.height;
         const panelAspectRatio = panelWidth / panelHeight;
         const targetAspectRatio = 16 / 9;
-        
+
         if (panelAspectRatio > targetAspectRatio) {
-            // Panel is wider than 16:9, fit by height
             const videoWidth = panelHeight * targetAspectRatio;
             videoWrapper.style.width = `${videoWidth}px`;
             videoWrapper.style.height = `${panelHeight}px`;
         } else {
-            // Panel is taller than 16:9, fit by width
             const videoHeight = panelWidth / targetAspectRatio;
             videoWrapper.style.width = `${panelWidth}px`;
             videoWrapper.style.height = `${videoHeight}px`;
@@ -65,36 +87,131 @@ class TwitchEmbed {
     }
 
     createVideoEmbed() {
+        // Clear existing embed
+        const videoContainer = document.getElementById('twitch-video');
+        if (videoContainer) {
+            videoContainer.innerHTML = '';
+        }
+
         this.embed = new Twitch.Embed("twitch-video", {
             width: "100%",
             height: "100%",
             channel: this.config.channel,
             layout: "video",
             autoplay: this.config.video.autoplay,
-            parent: this.config.domains
+            parent: [window.location.hostname]
         });
 
         this.embed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
             this.player = this.embed.getPlayer();
             this.player.setQuality(this.config.video.quality);
+            
             if (this.config.video.autoplay) {
                 this.player.play();
             }
-            // Maintain aspect ratio after video loads
-            setTimeout(() => this.maintainAspectRatio(), 1000);
+
+            this.maintainAspectRatio();
+            this.streamStatus.setOnline();
+
+            // Start monitoring stream status
+            if (this.statusMonitorCleanup) {
+                this.statusMonitorCleanup();
+            }
+            this.statusMonitorCleanup = this.streamStatus.monitorPlayer(this.player);
         });
+
+        this.embed.addEventListener(Twitch.Embed.VIDEO_PLAY, () => {
+            this.streamStatus.setOnline();
+        });
+
+        this.embed.addEventListener(Twitch.Player.OFFLINE, () => {
+            this.streamStatus.setOffline();
+        });
+
+        // Initial offline check after embed loads
+        setTimeout(() => {
+            if (this.player) {
+                try {
+                    const isPaused = this.player.isPaused();
+                    const hasEnded = this.player.getEnded();
+                    
+                    if (isPaused && hasEnded) {
+                        this.streamStatus.setOffline();
+                    }
+                } catch (error) {
+                    console.log('Could not check initial stream status');
+                }
+            }
+        }, 5000);
     }
 
     createChatEmbed() {
         const chatFrame = document.getElementById('twitch-chat');
-        const parentParams = this.config.domains.map(domain => `parent=${domain}`).join('&');
+        if (!chatFrame) return;
+
+        const currentDomain = window.location.hostname;
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
         
-        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?${parentParams}${darkMode}&migration=1`;
+        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}&migration=1`;
     }
 
-    changeChannel(newChannel) {
+    showChannelSwitcher() {
+        if (!this.channelSwitcher) {
+            this.channelSwitcher = new ChannelSwitcher(
+                this.config.channel,
+                (newChannel) => this.changeChannel(newChannel)
+            );
+        }
+        this.channelSwitcher.show();
+    }
+
+    hideChannelSwitcher() {
+        if (this.channelSwitcher) {
+            this.channelSwitcher.hide();
+        }
+    }
+
+    async changeChannel(newChannel) {
+        if (!newChannel || newChannel === this.config.channel) return;
+
+        // Update config
         this.config.channel = newChannel;
-        this.init();
+
+        // Update channel switcher
+        if (this.channelSwitcher) {
+            this.channelSwitcher.updateCurrentChannel(newChannel);
+        }
+
+        // Recreate video embed
+        this.createVideoEmbed();
+
+        // Update chat
+        if (this.showChat) {
+            this.createChatEmbed();
+        }
+
+        // Hide the switcher (will show again if new channel is also offline)
+        this.hideChannelSwitcher();
+
+        return Promise.resolve();
+    }
+
+    destroy() {
+        // Clean up status monitoring
+        if (this.statusMonitorCleanup) {
+            this.statusMonitorCleanup();
+        }
+
+        // Clean up channel switcher
+        if (this.channelSwitcher) {
+            this.channelSwitcher.destroy();
+        }
+
+        // Clean up embed
+        if (this.embed) {
+            this.embed = null;
+        }
+
+        this.player = null;
     }
 }

@@ -24,9 +24,28 @@
         </div>
     </div>
     
+    <!-- Core Dependencies -->
     <script src="https://embed.twitch.tv/embed/v1.js"></script>
+    
+    <!-- Configuration -->
     <script src="js/config.js"></script>
+    
+    <!-- Modular Components -->
+    <script src="js/stream-status.js"></script>
+    <script src="js/channel-switcher.js"></script>
+    
+    <!-- Main Application -->
     <script src="js/twitch-embed.js"></script>
     <script src="js/splitter.js"></script>
+    
+    <!-- Initialize Application -->
+    <script>
+        // Initialize the Twitch embed
+        const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, EFFECTIVE_SHOW_CHAT);
+        twitchEmbed.init();
+        
+        // Make it globally accessible for debugging
+        window.twitchEmbed = twitchEmbed;
+    </script>
 </body>
 </html>

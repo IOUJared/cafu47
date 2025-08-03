@@ -1,10 +1,6 @@
 const TWITCH_CONFIG = {
     channel: 'fukura____',
-    domains: [
-        'cafu47.com',
-        'www.cafu47.com',
-        'cafu47.pages.dev'
-    ],
+    // domains array removed - now using current domain automatically
     video: {
         autoplay: false,
         quality: 'chunked'

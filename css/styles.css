@@ -38,11 +38,14 @@ html, body {
     background: #000;
 }
 
+/* Ensure video wrapper starts with proper aspect ratio immediately */
 .video-wrapper {
     position: relative;
     width: 100%;
     max-width: 100%;
     max-height: 100%;
+    /* Remove any transitions that might cause flashing */
+    transition: none;
 }
 
 /* Maintain 16:9 aspect ratio */
@@ -58,6 +61,8 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
+    /* Prevent any loading flashes */
+    background: #000;
 }
 
 /* Video-only mode */
@@ -152,6 +157,246 @@ html, body {
     
     .chat-panel {
         height: 30%;
+    }
+}
+
+/* Stream offline UI */
+.stream-offline-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(20, 20, 25, 0.95), rgba(9, 9, 11, 0.98));
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: white;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.offline-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 450px;
+    width: 90%;
+}
+
+.offline-icon {
+    margin-bottom: 1rem;
+    color: #9146ff;
+    opacity: 0.8;
+}
+
+.offline-content h2 {
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.offline-content p {
+    margin-bottom: 2rem;
+    color: #a1a1aa;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.current-channel {
+    color: #9146ff;
+    font-weight: 600;
+}
+
+.channel-switcher {
+    margin-bottom: 1.5rem;
+}
+
+.channel-switcher label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    background: rgba(31, 31, 35, 0.8);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+    border-color: #9146ff;
+    background: rgba(31, 31, 35, 1);
+    box-shadow: 0 0 0 3px rgba(145, 70, 255, 0.1);
+}
+
+.input-group input::placeholder {
+    color: #6b7280;
+}
+
+.input-group button {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #9146ff, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    min-width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-group button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(145, 70, 255, 0.3);
+}
+
+.input-group button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.input-group button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.channel-suggestions {
+    text-align: left;
+}
+
+.suggestion-label {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.suggestion-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(55, 65, 81, 0.6);
+    color: #d1d5db;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.suggestion-btn:hover {
+    background: rgba(145, 70, 255, 0.2);
+    border-color: rgba(145, 70, 255, 0.4);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.error-message {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #dc2626;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile styles for offline UI */
+@media screen and (max-width: 768px) {
+    .offline-content {
+        padding: 1.5rem 1rem;
+        max-width: 95%;
+    }
+    
+    .offline-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .input-group {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .input-group input,
+    .input-group button {
+        width: 100%;
+    }
+    
+    .suggestions {
+        justify-content: center;
+    }
+    
+    .suggestion-btn {
+        flex: 0 0 auto;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .offline-content {
+        padding: 1rem;
+    }
+    
+    .offline-content h2 {
+        font-size: 1.25rem;
+    }
+    
+    .offline-content p {
+        font-size: 0.9rem;
     }
 }
 
