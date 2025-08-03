@@ -39,7 +39,8 @@ export class ChannelSwitcher {
         this.elements.suggestionsContainer.innerHTML = '';
         
         try {
-            const apiEndpoint = 'get-live-streams';
+            // Use an absolute path for the API endpoint for robustness.
+            const apiEndpoint = '/functions/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
             if (!response.ok) {
@@ -47,9 +48,12 @@ export class ChannelSwitcher {
                 throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
             }
             
-            const liveChannels = await response.json();
+            // **FIX:** The function now returns an object, so we need to parse it
+            // and get the 'suggestions' array from it.
+            const data = await response.json();
+            const liveChannels = data.suggestions;
 
-            if (liveChannels.length > 0) {
+            if (liveChannels && liveChannels.length > 0) {
                 this.elements.suggestionLabel.textContent = 'Related live channels:';
                 this._populateButtons(liveChannels);
             } else {
