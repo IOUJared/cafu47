@@ -6,6 +6,18 @@ class ChannelSwitcher {
         this.isVisible = false;
     }
 
+    // Input validation for Twitch usernames
+    _validateChannelName(channel) {
+        const trimmed = channel.trim().toLowerCase();
+        
+        // Twitch username rules: 4-25 chars, alphanumeric and underscores only
+        if (!/^[a-zA-Z0-9_]{4,25}$/.test(trimmed)) {
+            return { valid: false, error: 'Channel name must be 4-25 characters (letters, numbers, underscores only)' };
+        }
+        
+        return { valid: true, channel: trimmed };
+    }
+
     createUI() {
         if (this.ui) return this.ui;
 
@@ -23,7 +35,7 @@ class ChannelSwitcher {
                 <div class="channel-switcher">
                     <label for="new-channel">Watch another channel:</label>
                     <div class="input-group">
-                        <input type="text" id="new-channel" placeholder="Enter channel name" autocomplete="off" />
+                        <input type="text" id="new-channel" placeholder="Enter channel name" autocomplete="off" maxlength="25" />
                         <button id="switch-channel-btn" type="button">
                             <span class="btn-text">Watch</span>
                             <span class="btn-loading" style="display: none;">
@@ -61,8 +73,19 @@ class ChannelSwitcher {
         const suggestions = this.ui.querySelectorAll('.suggestion-btn');
 
         const switchChannel = async (channelName = null) => {
-            const newChannel = channelName || input.value.trim().toLowerCase();
-            if (!newChannel || newChannel === this.currentChannel) return;
+            const rawChannel = channelName || input.value;
+            
+            if (!rawChannel) return;
+
+            // Validate input
+            const validation = this._validateChannelName(rawChannel);
+            if (!validation.valid) {
+                this.showError(validation.error);
+                return;
+            }
+
+            const newChannel = validation.channel;
+            if (newChannel === this.currentChannel) return;
 
             // Show loading state
             this.setLoading(true);
