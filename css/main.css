@@ -167,10 +167,7 @@ html, body {
 /* --- UI Buttons --- */
 .ui-btn {
     display: flex;
-    position: fixed;
     z-index: 2000;
-    width: 56px;
-    height: 56px;
     background-color: var(--md-primary-color);
     color: var(--md-on-primary-color);
     border: none;
@@ -194,13 +191,19 @@ html, body {
 }
 
 #toggle-chat-btn {
-    bottom: 20px;
-    left: 20px;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
 }
 
 #fullscreen-btn {
+    position: fixed;
     right: 20px;
     bottom: 20px;
+    width: 56px;
+    height: 56px;
     display: none; /* Hidden by default, shown on mobile */
 }
 
@@ -224,6 +227,16 @@ html, body {
 
     #fullscreen-btn {
         display: flex; /* Show fullscreen button on mobile */
+    }
+    
+    #toggle-chat-btn {
+        bottom: 20px;
+        left: 20px;
+        top: auto;
+        right: auto;
+        position: fixed; /* Revert to fixed on mobile */
+        width: 56px;
+        height: 56px;
     }
 
     /* Hide buttons when in native fullscreen */
