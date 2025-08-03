@@ -54,7 +54,8 @@ export class TwitchEmbed {
         if (status === 'offline') {
             await this._handleOfflineState();
         } else {
-            if (this.config.channel !== this.mainChannel) {
+            // If the stream comes online, ensure we are on the main channel
+            if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
                 this.changeChannel(this.mainChannel, false);
             }
             this.hideChannelSwitcher();
@@ -63,6 +64,7 @@ export class TwitchEmbed {
     }
 
     async _handleOfflineState() {
+        // Only check for hosts if we are currently on the main channel
         if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
             this.showChannelSwitcher();
             return;
@@ -92,7 +94,7 @@ export class TwitchEmbed {
             }
         } catch (error) {
             console.error("Could not check for Fu's Family host:", error);
-            this.showChannelSwitcher();
+            this.showChannelSwitcher(); // Fallback to offline UI on error
         }
     }
 
@@ -133,9 +135,6 @@ export class TwitchEmbed {
     }
 
     _calculateDesktopAspectRatio(videoWrapper) {
-        const videoPanel = document.querySelector('.video-panel');
-        if (!videoPanel) return;
-        const { width: panelWidth, height: panelHeight }_calculateDesktopAspectRatio(videoWrapper) {
         const videoPanel = document.querySelector('.video-panel');
         if (!videoPanel) return;
         const { width: panelWidth, height: panelHeight } = videoPanel.getBoundingClientRect();
