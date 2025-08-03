@@ -1,202 +1,156 @@
 class ChannelSwitcher {
-    constructor(currentChannel, onChannelChange) {
-        this.currentChannel = currentChannel;
-        this.onChannelChange = onChannelChange;
-        this.ui = null;
+    constructor(onChannelChangeCallback, config) {
+        this.onChannelChange = onChannelChangeCallback;
+        this.config = config;
         this.isVisible = false;
-    }
-
-    // Input validation for Twitch usernames
-    _validateChannelName(channel) {
-        const trimmed = channel.trim().toLowerCase();
         
-        // Twitch username rules: 4-25 chars, alphanumeric and underscores only
-        if (!/^[a-zA-Z0-9_]{4,25}$/.test(trimmed)) {
-            return { valid: false, error: 'Channel name must be 4-25 characters (letters, numbers, underscores only)' };
+        this._initDOMElements();
+        if (!this.ui) {
+            console.error('ChannelSwitcher UI not found in the DOM.');
+            return;
         }
+
+        this._populateSuggestions();
+        this._setupEventListeners();
+    }
+
+    _initDOMElements() {
+        this.ui = document.getElementById('stream-offline-ui');
+        if (!this.ui) return;
+
+        this.elements = {
+            currentChannelSpan: this.ui.querySelector('.current-channel'),
+            input: this.ui.querySelector('#new-channel-input'),
+            button: this.ui.querySelector('#switch-channel-btn'),
+            suggestionsContainer: this.ui.querySelector('.channel-suggestions .suggestions'),
+            inputGroup: this.ui.querySelector('.input-group'),
+            btnText: this.ui.querySelector('.btn-text'),
+            btnLoading: this.ui.querySelector('.btn-loading')
+        };
+    }
+
+    _populateSuggestions() {
+        if (!this.config?.suggestions || !this.elements.suggestionsContainer) return;
         
-        return { valid: true, channel: trimmed };
+        this.elements.suggestionsContainer.innerHTML = ''; // Clear existing
+        
+        this.config.suggestions.forEach(({ channel, label }) => {
+            const btn = document.createElement('button');
+            btn.className = 'suggestion-btn';
+            btn.dataset.channel = channel;
+            btn.textContent = label;
+            this.elements.suggestionsContainer.appendChild(btn);
+        });
     }
 
-    createUI() {
-        if (this.ui) return this.ui;
-
-        this.ui = document.createElement('div');
-        this.ui.className = 'stream-offline-ui';
-        this.ui.innerHTML = `
-            <div class="offline-content">
-                <div class="offline-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                </div>
-                <h2>Stream is Offline</h2>
-                <p>The channel "<span class="current-channel">${this.currentChannel}</span>" is currently offline.</p>
-                <div class="channel-switcher">
-                    <label for="new-channel">Watch another channel:</label>
-                    <div class="input-group">
-                        <input type="text" id="new-channel" placeholder="Enter channel name" autocomplete="off" maxlength="25" />
-                        <button id="switch-channel-btn" type="button">
-                            <span class="btn-text">Watch</span>
-                            <span class="btn-loading" style="display: none;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z">
-                                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-                                    </path>
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="channel-suggestions">
-                        <span class="suggestion-label">Popular channels:</span>
-                        <div class="suggestions">
-                            <button class="suggestion-btn" data-channel="xqc">xQc</button>
-                            <button class="suggestion-btn" data-channel="shroud">Shroud</button>
-                            <button class="suggestion-btn" data-channel="pokimane">Pokimane</button>
-                            <button class="suggestion-btn" data-channel="sodapoppin">Sodapoppin</button>
-                        </div>
-                    </div>
-                    <div class="url-info">
-                        <small>💡 URL will update to reflect the current channel</small>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        this.setupEventListeners();
-        return this.ui;
-    }
-
-    setupEventListeners() {
-        const input = this.ui.querySelector('#new-channel');
-        const button = this.ui.querySelector('#switch-channel-btn');
-        const suggestions = this.ui.querySelectorAll('.suggestion-btn');
+    _setupEventListeners() {
+        if (!this.ui) return;
 
         const switchChannel = async (channelName = null) => {
-            const rawChannel = channelName || input.value;
-            
+            const rawChannel = channelName || this.elements.input.value;
             if (!rawChannel) return;
 
-            // Validate input
-            const validation = this._validateChannelName(rawChannel);
+            const validation = Utils.validateTwitchChannel(rawChannel);
             if (!validation.valid) {
                 this.showError(validation.error);
                 return;
             }
 
             const newChannel = validation.channel;
-            if (newChannel === this.currentChannel) return;
+            const currentShownChannel = this.elements.currentChannelSpan.textContent.toLowerCase();
+            if (newChannel === currentShownChannel) return;
 
-            // Show loading state
             this.setLoading(true);
 
             try {
+                // The onChannelChange callback is expected to be async and handle the switch
                 await this.onChannelChange(newChannel);
-                this.currentChannel = newChannel;
             } catch (error) {
                 console.error('Failed to switch channel:', error);
-                this.showError('Failed to switch channel. Please try again.');
-            } finally {
+                this.showError('Could not switch to that channel. Please try again.');
                 this.setLoading(false);
             }
         };
 
-        // Main input and button
-        button.addEventListener('click', () => switchChannel());
-        input.addEventListener('keypress', (e) => {
+        this.elements.button.addEventListener('click', () => switchChannel());
+        this.elements.input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 switchChannel();
             }
         });
 
-        // Suggestion buttons
-        suggestions.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const channel = btn.dataset.channel;
-                input.value = channel;
+        this.elements.suggestionsContainer.addEventListener('click', (e) => {
+            if (e.target.matches('.suggestion-btn')) {
+                const channel = e.target.dataset.channel;
+                this.elements.input.value = channel;
                 switchChannel(channel);
-            });
+            }
         });
 
-        // Clear error on input
-        input.addEventListener('input', () => {
-            this.clearError();
-        });
+        this.elements.input.addEventListener('input', () => this.clearError());
     }
 
     setLoading(loading) {
-        const button = this.ui.querySelector('#switch-channel-btn');
-        const btnText = button.querySelector('.btn-text');
-        const btnLoading = button.querySelector('.btn-loading');
-        const input = this.ui.querySelector('#new-channel');
-
-        button.disabled = loading;
-        input.disabled = loading;
+        if (!this.ui) return;
+        this.elements.button.disabled = loading;
+        this.elements.input.disabled = loading;
         
-        if (loading) {
-            btnText.style.display = 'none';
-            btnLoading.style.display = 'inline-flex';
-        } else {
-            btnText.style.display = 'inline';
-            btnLoading.style.display = 'none';
-        }
+        this.elements.btnText.style.display = loading ? 'none' : 'inline';
+        this.elements.btnLoading.style.display = loading ? 'inline-flex' : 'none';
     }
 
     showError(message) {
+        if (!this.ui) return;
         this.clearError();
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.textContent = message;
         
-        const inputGroup = this.ui.querySelector('.input-group');
-        inputGroup.appendChild(errorDiv);
+        this.elements.inputGroup.appendChild(errorDiv);
+        this.elements.input.focus();
     }
 
     clearError() {
-        const existingError = this.ui.querySelector('.error-message');
+        if (!this.ui) return;
+        const existingError = this.elements.inputGroup.querySelector('.error-message');
         if (existingError) {
             existingError.remove();
         }
     }
 
     show() {
-        if (this.isVisible) return;
+        if (this.isVisible || !this.ui) return;
 
-        // Always append to body for full viewport coverage
-        this.createUI();
-        document.body.appendChild(this.ui);
+        this.ui.style.display = 'flex';
         document.body.classList.add('offline-ui-active');
         this.isVisible = true;
 
-        // Focus input after a short delay
         setTimeout(() => {
-            const input = this.ui.querySelector('#new-channel');
-            if (input) input.focus();
-        }, 100);
+            if (this.elements.input) this.elements.input.focus();
+        }, CONSTANTS.UI_DELAYS.FOCUS_INPUT);
     }
 
     hide() {
         if (!this.isVisible || !this.ui) return;
-
-        this.ui.remove();
+        
+        this.ui.style.display = 'none';
         document.body.classList.remove('offline-ui-active');
         this.isVisible = false;
+        
+        // Reset state for next time
+        this.setLoading(false);
         this.clearError();
+        this.elements.input.value = '';
     }
 
     updateCurrentChannel(channel) {
-        this.currentChannel = channel;
-        if (this.ui) {
-            const channelSpan = this.ui.querySelector('.current-channel');
-            if (channelSpan) {
-                channelSpan.textContent = channel;
-            }
+        if (this.elements.currentChannelSpan) {
+            this.elements.currentChannelSpan.textContent = channel;
         }
     }
 
     destroy() {
         this.hide();
-        this.ui = null;
     }
 }

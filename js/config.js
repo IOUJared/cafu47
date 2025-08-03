@@ -32,6 +32,14 @@ const TWITCH_CONFIG = {
     chat: {
         darkMode: true
     },
+    channelSwitcher: {
+        suggestions: [
+            { channel: 'xqc', label: 'xQc' },
+            { channel: 'shroud', label: 'Shroud' },
+            { channel: 'pokimane', label: 'Pokimane' },
+            { channel: 'sodapoppin', label: 'Sodapoppin' }
+        ]
+    },
     splitter: {
         minVideoWidth: 300,
         minChatWidth: 250,
@@ -73,6 +81,14 @@ const Utils = {
 
     normalizeChannel: (channel) => channel?.toLowerCase().trim() || '',
     
+    validateTwitchChannel: (channel) => {
+        const trimmed = Utils.normalizeChannel(channel);
+        if (!/^[a-zA-Z0-9_]{4,25}$/.test(trimmed)) {
+            return { valid: false, error: 'Channel name must be 4-25 characters (letters, numbers, underscores only).' };
+        }
+        return { valid: true, channel: trimmed };
+    },
+
     createSVG: (path, size = 24) => {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">${path}</svg>`;
     }

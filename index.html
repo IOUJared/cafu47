@@ -27,32 +27,69 @@
         </div>
     </div>
     
-    <!-- Core Dependencies -->
+    <div id="stream-offline-ui" class="stream-offline-ui" style="display: none;">
+        <div class="offline-content">
+            <div class="offline-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+            </div>
+            <h2>Stream is Offline</h2>
+            <p>The channel "<span class="current-channel"></span>" is currently offline.</p>
+            <div class="channel-switcher">
+                <label for="new-channel-input">Watch another channel:</label>
+                <div class="input-group">
+                    <input type="text" id="new-channel-input" placeholder="Enter channel name" autocomplete="off" maxlength="25" />
+                    <button id="switch-channel-btn" type="button">
+                        <span class="btn-text">Watch</span>
+                        <span class="btn-loading" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z">
+                                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                                </path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                <div id="channel-suggestions" class="channel-suggestions">
+                    <span class="suggestion-label">Popular channels:</span>
+                    <div class="suggestions">
+                        </div>
+                </div>
+                <div class="url-info">
+                    <small>💡 URL will update to reflect the current channel</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://embed.twitch.tv/embed/v1.js"></script>
     
-    <!-- Configuration -->
     <script src="js/config.js"></script>
     
-    <!-- Mobile UI Hider (NEW) -->
     <script src="js/mobile-ui-hider.js"></script>
     
-    <!-- Modular Components -->
     <script src="js/url-manager.js"></script>
     <script src="js/stream-status.js"></script>
     <script src="js/channel-switcher.js"></script>
-    
-    <!-- Main Application -->
-    <script src="js/twitch-embed.js"></script>
     <script src="js/splitter.js"></script>
+    <script src="js/twitch-embed.js"></script>
     
-    <!-- Initialize Application -->
     <script>
-        // Initialize the Twitch embed
-        const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, EFFECTIVE_SHOW_CHAT);
-        twitchEmbed.init();
-        
-        // Make it globally accessible for debugging
-        window.twitchEmbed = twitchEmbed;
+        document.addEventListener('DOMContentLoaded', () => {
+            const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, EFFECTIVE_SHOW_CHAT);
+            twitchEmbed.init();
+            
+            if (EFFECTIVE_SHOW_CHAT) {
+                const splitter = new ResizableSplitter(TWITCH_CONFIG, twitchEmbed);
+            }
+
+            if (IS_MOBILE && !EFFECTIVE_SHOW_CHAT) {
+                document.querySelector('.container').classList.add('mobile-hide-chat');
+            }
+            
+            window.twitchEmbed = twitchEmbed;
+        });
     </script>
 </body>
 </html>
