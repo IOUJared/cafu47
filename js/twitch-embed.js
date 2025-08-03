@@ -27,9 +27,9 @@ class TwitchEmbed {
         }
     }
 
-    _handleStatusChange(status) {
+    async _handleStatusChange(status) {
         if (status === 'offline') {
-            this.showChannelSwitcher();
+            await this.showChannelSwitcher();
         } else {
             this.hideChannelSwitcher();
         }
@@ -168,7 +168,7 @@ class TwitchEmbed {
         chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}&migration=1`;
     }
 
-    showChannelSwitcher() {
+    async showChannelSwitcher() {
         if (!this.channelSwitcher) {
             this.channelSwitcher = new ChannelSwitcher(
                 (newChannel) => this.changeChannel(newChannel),
@@ -176,7 +176,7 @@ class TwitchEmbed {
             );
         }
         this.channelSwitcher.updateCurrentChannel(this.config.channel);
-        this.channelSwitcher.show();
+        await this.channelSwitcher.show();
     }
 
     hideChannelSwitcher() {

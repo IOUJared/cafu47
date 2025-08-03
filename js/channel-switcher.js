@@ -10,7 +10,6 @@ class ChannelSwitcher {
             return;
         }
 
-        this._populateSuggestions();
         this._setupEventListeners();
     }
 
@@ -23,18 +22,54 @@ class ChannelSwitcher {
             input: this.ui.querySelector('#new-channel-input'),
             button: this.ui.querySelector('#switch-channel-btn'),
             suggestionsContainer: this.ui.querySelector('.channel-suggestions .suggestions'),
+            suggestionLabel: this.ui.querySelector('.suggestion-label'),
             inputGroup: this.ui.querySelector('.input-group'),
             btnText: this.ui.querySelector('.btn-text'),
             btnLoading: this.ui.querySelector('.btn-loading')
         };
     }
 
-    _populateSuggestions() {
-        if (!this.config?.suggestions || !this.elements.suggestionsContainer) return;
+    async _loadLiveSuggestions() {
+        if (!this.elements.suggestionsContainer || !this.config?.suggestions) {
+            return;
+        }
+
+        this.elements.suggestionLabel.textContent = 'Finding live channels...';
+        this.elements.suggestionsContainer.innerHTML = '';
+
+        const staticChannels = this.config.suggestions.map(s => s.channel);
         
-        this.elements.suggestionsContainer.innerHTML = ''; // Clear existing
-        
-        this.config.suggestions.forEach(({ channel, label }) => {
+        try {
+            // This relative path works for both local dev with Wrangler and production
+            const apiEndpoint = 'get-live-streams';
+            const response = await fetch(`${apiEndpoint}?channels=${staticChannels.join(',')}`);
+            
+            if (!response.ok) {
+                // Provide a more detailed error for easier debugging
+                const errorText = await response.text();
+                throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
+            }
+            
+            const liveChannels = await response.json();
+
+            if (liveChannels.length > 0) {
+                this.elements.suggestionLabel.textContent = 'Online now:';
+                this._populateButtons(liveChannels);
+            } else {
+                this.elements.suggestionLabel.textContent = 'No suggested channels are live. Try one of these:';
+                this._populateButtons(this.config.suggestions); // Fallback to static list
+            }
+
+        } catch (error) {
+            console.error('Failed to load live channels:', error);
+            this.elements.suggestionLabel.textContent = 'Could not find live channels. Try one of these:';
+            this._populateButtons(this.config.suggestions); // Fallback to static list on error
+        }
+    }
+
+    _populateButtons(channels) {
+        this.elements.suggestionsContainer.innerHTML = '';
+        channels.forEach(({ channel, label }) => {
             const btn = document.createElement('button');
             btn.className = 'suggestion-btn';
             btn.dataset.channel = channel;
@@ -63,7 +98,6 @@ class ChannelSwitcher {
             this.setLoading(true);
 
             try {
-                // The onChannelChange callback is expected to be async and handle the switch
                 await this.onChannelChange(newChannel);
             } catch (error) {
                 console.error('Failed to switch channel:', error);
@@ -119,12 +153,14 @@ class ChannelSwitcher {
         }
     }
 
-    show() {
+    async show() {
         if (this.isVisible || !this.ui) return;
 
         this.ui.style.display = 'flex';
         document.body.classList.add('offline-ui-active');
         this.isVisible = true;
+
+        await this._loadLiveSuggestions();
 
         setTimeout(() => {
             if (this.elements.input) this.elements.input.focus();
@@ -138,7 +174,6 @@ class ChannelSwitcher {
         document.body.classList.remove('offline-ui-active');
         this.isVisible = false;
         
-        // Reset state for next time
         this.setLoading(false);
         this.clearError();
         this.elements.input.value = '';
