@@ -77,11 +77,24 @@ export class TwitchEmbed {
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}`);
             
             if (!response.ok) {
-                console.error('Failed to check main channel status');
+                console.error('Failed to check main channel status:', response.status, response.statusText);
                 return;
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            if (!responseText.trim()) {
+                console.error('Empty response from server');
+                return;
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                console.error('Response was:', responseText.substring(0, 200) + '...');
+                return;
+            }
             
             if (data.mainChannelLive) {
                 // Main channel is live, switch back
@@ -105,13 +118,37 @@ export class TwitchEmbed {
             const familyQuery = TWITCH_CONFIG.fuFamily.join(',');
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
             
-            const responseBody = await response.text();
-
             if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}. Body: ${responseBody}`);
+                console.error('Server error:', response.status, response.statusText);
+                this.showChannelSwitcher();
+                return;
             }
             
-            const data = JSON.parse(responseBody);
+            const responseText = await response.text();
+            
+            if (!responseText.trim()) {
+                console.error('Empty response from server');
+                this.showChannelSwitcher();
+                return;
+            }
+            
+            // Check if response looks like HTML (common when function isn't found)
+            if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+                console.error('Server returned HTML instead of JSON - function may not be deployed');
+                console.error('Response preview:', responseText.substring(0, 100) + '...');
+                this.showChannelSwitcher();
+                return;
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                console.error('Response was:', responseText.substring(0, 200) + '...');
+                this.showChannelSwitcher();
+                return;
+            }
 
             // Main channel is offline, check for family members
             if (data.liveFamilyMember) {

@@ -32,8 +32,6 @@ export class ChannelSwitcher {
         };
     }
 
-    // js/channel-switcher.js
-
     async _loadLiveSuggestions() {
         if (!this.elements.suggestionsContainer) return;
 
@@ -44,13 +42,38 @@ export class ChannelSwitcher {
             const apiEndpoint = '/functions/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
-            const responseBody = await response.text();
-
             if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}. Body: ${responseBody}`);
+                console.error('Server error:', response.status, response.statusText);
+                this.elements.suggestionLabel.textContent = 'Could not load related live channels.';
+                return;
             }
             
-            const data = JSON.parse(responseBody);
+            const responseText = await response.text();
+
+            if (!responseText.trim()) {
+                console.error('Empty response from server');
+                this.elements.suggestionLabel.textContent = 'Could not load related live channels.';
+                return;
+            }
+            
+            // Check if response looks like HTML (common when function isn't found)
+            if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+                console.error('Server returned HTML instead of JSON - function may not be deployed');
+                console.error('Response preview:', responseText.substring(0, 100) + '...');
+                this.elements.suggestionLabel.textContent = 'API not available - function may not be deployed.';
+                return;
+            }
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                console.error('Response was:', responseText.substring(0, 200) + '...');
+                this.elements.suggestionLabel.textContent = 'Could not load related live channels.';
+                return;
+            }
+            
             const liveChannels = data.suggestions;
 
             if (liveChannels && liveChannels.length > 0) {
@@ -143,8 +166,6 @@ export class ChannelSwitcher {
         this.elements.inputGroup.appendChild(errorDiv);
         this.elements.input.focus();
     }
-
-
 
     clearError() {
         if (!this.ui) return;

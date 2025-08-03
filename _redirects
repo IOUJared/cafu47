@@ -1,0 +1,13 @@
+# _redirects
+
+# API functions should be handled by Cloudflare Functions
+/functions/get-live-streams /functions/get-live-streams 200
+
+# Static assets should be served with correct MIME types
+/css/* /css/:splat 200
+/js/* /js/:splat 200
+/index.html /index.html 200
+
+# Root and any other path should serve index.html for SPA routing
+/ /index.html 200
+/* /index.html 200
