@@ -1,5 +1,17 @@
 # _headers
 
+# Static assets
+/css/*
+  Content-Type: text/css
+
+/js/*
+  Content-Type: application/javascript
+
+# Functions should return JSON
+/functions/*
+  Content-Type: application/json
+
+# Main pages
 /*
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
