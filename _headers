@@ -13,12 +13,12 @@
   Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv")
 
   # Content Security Policy (CSP)
-  # This version adds sentry.io to the connect-src directive to allow Twitch's internal error reporting.
+  # This version adds cloudflareinsights.com to connect-src to allow the beacon to work.
   Content-Security-Policy:
     default-src 'self';
     script-src 'self' https://embed.twitch.tv https://static.cloudflareinsights.com;
     style-src 'self' 'unsafe-inline';
     frame-src 'self' https://player.twitch.tv https://www.twitch.tv;
-    connect-src 'self' https://*.twitch.tv wss://*.twitch.tv https://*.twitchcdn.net https://api.twitch.tv https://sentry.io;
+    connect-src 'self' https://*.twitch.tv wss://*.twitch.tv https://*.twitchcdn.net https://api.twitch.tv https://sentry.io https://static.cloudflareinsights.com;
     img-src 'self' data: https://static-cdn.jtvnw.net https://*.twitch.tv;
     media-src blob: https://*.twitchcdn.net;
