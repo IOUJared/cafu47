@@ -2,10 +2,11 @@
 
 export const TWITCH_CONFIG = {
     channel: 'fukura____',
-    autohost: {
-        enabled: true,
-        host_channel: 'fuslie'
-    },
+    // List of channels to auto-host if the main channel is offline.
+    // The first one found live in the list will be hosted.
+    fuFamily: [
+        'fuslie'
+    ],
     video: {
         autoplay: true,
         quality: 'chunked',
