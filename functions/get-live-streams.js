@@ -51,16 +51,17 @@ export async function onRequest(context) {
         const gameId = channelData.data[0]?.game_id;
 
         let streamsData;
+        const languageFilter = 'language=en'; // Filter for English streams
 
         // Step 3: Fetch top streams, either by game or overall top streams as a fallback
         if (gameId) {
-            // Fetch top 5 streams in the same game, excluding the original channel
-            const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?game_id=${gameId}&first=6`, { headers });
+            // Fetch top 5 English streams in the same game
+            const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?game_id=${gameId}&${languageFilter}&first=6`, { headers });
             if (!streamsResponse.ok) throw new Error('Failed to fetch streams by game.');
             streamsData = await streamsResponse.json();
         } else {
-            // Fallback: If no game was being played, get the overall top 5 streams
-            const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?first=6`, { headers });
+            // Fallback: If no game was being played, get the overall top 5 English streams
+            const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?${languageFilter}&first=6`, { headers });
             if (!streamsResponse.ok) throw new Error('Failed to fetch top streams.');
             streamsData = await streamsResponse.json();
         }
