@@ -1,7 +1,7 @@
 class TwitchEmbed {
     constructor(config, showChat = true) {
         this.config = config;
-        this.originalChannel = config.channel.toLowerCase(); // Store original channel
+        this._originalChannel = config.channel.toLowerCase().trim();
         this.showChat = showChat;
         this.embed = null;
         this.player = null;
@@ -10,65 +10,66 @@ class TwitchEmbed {
         this.statusMonitorCleanup = null;
         
         // Initialize URL manager
-        this.urlManager = new URLManager(this.originalChannel);
+        this.urlManager = new URLManager(this._originalChannel);
         
-        this.setupStatusHandling();
-        this.setupURLHandling();
+        this._setupEventHandlers();
     }
 
-    setupStatusHandling() {
-        this.streamStatus.onStatusChange((status) => {
-            if (status === 'offline') {
-                this.showChannelSwitcher();
-            } else {
-                this.hideChannelSwitcher();
-            }
-        });
-    }
-
-    setupURLHandling() {
-        // Listen for URL-driven channel changes (back/forward navigation)
-        this.urlManager.onChannelChange((channel, fromURLUpdate) => {
-            if (fromURLUpdate === false) {
-                // This change came from URL navigation, update the embed
-                this.config.channel = channel;
-                this.recreateEmbed();
-            }
-        });
-
-        // Check if we should start with a different channel from URL
+    _setupEventHandlers() {
+        this.streamStatus.onStatusChange(this._handleStatusChange.bind(this));
+        this.urlManager.onChannelChange(this._handleURLChannelChange.bind(this));
+        
+        // Setup responsive handlers with debouncing
+        const debouncedResize = Utils.debounce(() => this.maintainAspectRatio(), 100);
+        window.addEventListener('resize', debouncedResize);
+        
+        // Initial channel from URL
         const urlChannel = this.urlManager.getCurrentChannel();
-        if (urlChannel !== this.originalChannel) {
+        if (urlChannel !== this._originalChannel) {
             this.config.channel = urlChannel;
         }
     }
 
+    _handleStatusChange(status) {
+        if (status === 'offline') {
+            this.showChannelSwitcher();
+        } else {
+            this.hideChannelSwitcher();
+        }
+    }
+
+    _handleURLChannelChange(channel, fromURLUpdate) {
+        if (fromURLUpdate === false) {
+            this.config.channel = channel;
+            this.recreateEmbed();
+        }
+    }
+
     init() {
-        this.setupLayout();
+        this._setupLayout();
         this.maintainAspectRatio();
         this.createVideoEmbed();
+        
         if (this.showChat) {
             this.createChatEmbed();
         }
-        this.setupAspectRatioMaintenance();
+        
+        this._setupAspectRatioMaintenance();
     }
 
-    setupLayout() {
+    _setupLayout() {
         const container = document.querySelector('.container');
         if (!this.showChat) {
             container.classList.add('video-only');
         }
     }
 
-    setupAspectRatioMaintenance() {
-        const updateVideoSize = () => {
-            this.maintainAspectRatio();
-        };
-
-        window.addEventListener('resize', updateVideoSize);
-
+    _setupAspectRatioMaintenance() {
+        const updateVideoSize = Utils.debounce(() => this.maintainAspectRatio(), 50);
+        
         const observer = new MutationObserver(updateVideoSize);
         const chatPanel = document.getElementById('chat-panel');
+        
         if (chatPanel) {
             observer.observe(chatPanel, {
                 attributes: true,
@@ -81,32 +82,27 @@ class TwitchEmbed {
         const videoWrapper = document.querySelector('.video-wrapper');
         if (!videoWrapper) return;
 
-        const isMobile = window.innerWidth <= 768;
-        const isLandscape = window.innerWidth > window.innerHeight;
+        const isMobile = Utils.isMobile();
+        const isLandscape = Utils.isLandscape();
         
-        // Mobile landscape: let video fill container without aspect ratio constraints
-        if (isMobile && isLandscape) {
-            videoWrapper.style.width = '';
-            videoWrapper.style.height = '';
-            return;
-        }
-        
-        // Mobile portrait: let CSS handle the aspect ratio
-        if (isMobile && !isLandscape) {
+        // Mobile: let CSS handle aspect ratios
+        if (isMobile) {
             videoWrapper.style.width = '';
             videoWrapper.style.height = '';
             return;
         }
 
-        // Desktop: calculate aspect ratio for dynamic sizing
+        // Desktop: calculate aspect ratio dynamically
+        this._calculateDesktopAspectRatio(videoWrapper);
+    }
+
+    _calculateDesktopAspectRatio(videoWrapper) {
         const videoPanel = document.querySelector('.video-panel');
         if (!videoPanel) return;
 
-        const panelRect = videoPanel.getBoundingClientRect();
-        const panelWidth = panelRect.width;
-        const panelHeight = panelRect.height;
+        const { width: panelWidth, height: panelHeight } = videoPanel.getBoundingClientRect();
         const panelAspectRatio = panelWidth / panelHeight;
-        const targetAspectRatio = 16 / 9;
+        const targetAspectRatio = CONSTANTS.ASPECT_RATIO.TARGET;
 
         if (panelAspectRatio > targetAspectRatio) {
             const videoWidth = panelHeight * targetAspectRatio;
@@ -120,7 +116,6 @@ class TwitchEmbed {
     }
 
     createVideoEmbed() {
-        // Clear existing embed
         const videoContainer = document.getElementById('twitch-video');
         if (videoContainer) {
             videoContainer.innerHTML = '';
@@ -135,6 +130,10 @@ class TwitchEmbed {
             parent: [window.location.hostname]
         });
 
+        this._setupVideoEvents();
+    }
+
+    _setupVideoEvents() {
         this.embed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
             this.player = this.embed.getPlayer();
             this.player.setQuality(this.config.video.quality);
@@ -146,7 +145,7 @@ class TwitchEmbed {
             this.maintainAspectRatio();
             this.streamStatus.setOnline();
 
-            // Start monitoring stream status
+            // Start monitoring
             if (this.statusMonitorCleanup) {
                 this.statusMonitorCleanup();
             }
@@ -161,21 +160,23 @@ class TwitchEmbed {
             this.streamStatus.setOffline();
         });
 
-        // Initial offline check after embed loads
-        setTimeout(() => {
-            if (this.player) {
-                try {
-                    const isPaused = this.player.isPaused();
-                    const hasEnded = this.player.getEnded();
-                    
-                    if (isPaused && hasEnded) {
-                        this.streamStatus.setOffline();
-                    }
-                } catch (error) {
-                    console.log('Could not check initial stream status');
-                }
+        // Initial status check
+        setTimeout(() => this._checkInitialStatus(), CONSTANTS.STREAM_STATUS.INITIAL_CHECK_DELAY);
+    }
+
+    _checkInitialStatus() {
+        if (!this.player) return;
+        
+        try {
+            const isPaused = this.player.isPaused();
+            const hasEnded = this.player.getEnded();
+            
+            if (isPaused && hasEnded) {
+                this.streamStatus.setOffline();
             }
-        }, 5000);
+        } catch (error) {
+            console.log('Could not check initial stream status:', error);
+        }
     }
 
     createChatEmbed() {
@@ -205,74 +206,60 @@ class TwitchEmbed {
     }
 
     recreateEmbed() {
-        // Recreate video embed
         this.createVideoEmbed();
 
-        // Update chat
         if (this.showChat) {
             this.createChatEmbed();
         }
 
-        // Update channel switcher if it exists
         if (this.channelSwitcher) {
             this.channelSwitcher.updateCurrentChannel(this.config.channel);
         }
 
-        // Hide the switcher
         this.hideChannelSwitcher();
     }
 
     async changeChannel(newChannel) {
-        if (!newChannel || newChannel.toLowerCase() === this.config.channel.toLowerCase()) {
-            return;
+        const normalizedChannel = newChannel?.toLowerCase().trim() || '';
+        
+        if (!normalizedChannel || normalizedChannel === this.config.channel.toLowerCase()) {
+            return Promise.resolve();
         }
 
-        const normalizedChannel = newChannel.toLowerCase();
-
-        // Update config
         this.config.channel = normalizedChannel;
-
-        // Update URL (this will automatically update the hash)
         this.urlManager.setChannel(normalizedChannel, true);
-
-        // Recreate the embed
         this.recreateEmbed();
 
         return Promise.resolve();
     }
 
-    getCurrentChannel() {
+    // Getters for cleaner API
+    get currentChannel() {
         return this.config.channel;
     }
 
-    getOriginalChannel() {
-        return this.originalChannel;
+    get originalChannel() {
+        return this._originalChannel;
     }
 
-    isOnOriginalChannel() {
-        return this.config.channel.toLowerCase() === this.originalChannel;
+    get isOnOriginalChannel() {
+        return this.config.channel.toLowerCase() === this._originalChannel;
     }
 
-    getCurrentURL() {
+    get currentURL() {
         return this.urlManager.getCurrentURL();
     }
 
     destroy() {
-        // Clean up status monitoring
         if (this.statusMonitorCleanup) {
             this.statusMonitorCleanup();
         }
 
-        // Clean up channel switcher
         if (this.channelSwitcher) {
             this.channelSwitcher.destroy();
         }
 
-        // Clean up embed
-        if (this.embed) {
-            this.embed = null;
-        }
-
+        this.embed = null;
         this.player = null;
     }
 }

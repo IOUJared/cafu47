@@ -1,162 +1,217 @@
 class ResizableSplitter {
     constructor(config) {
         this.config = config;
-        this.isResizing = false;
-        this.isMobile = window.innerWidth <= config.mobile.breakpoint;
-        this.isLandscape = window.innerWidth > window.innerHeight;
-        this.startY = 0;
-        this.startX = 0;
-        this.initElements();
-        this.bindEvents();
-        this.handleResize();
+        this.state = {
+            isResizing: false,
+            isMobile: Utils.isMobile(),
+            isLandscape: Utils.isLandscape(),
+            startX: 0,
+            startY: 0
+        };
+        
+        this._initElements();
+        this._bindEvents();
+        this._handleResize();
     }
 
-    initElements() {
-        this.splitter = document.getElementById('splitter');
-        this.chatPanel = document.getElementById('chat-panel');
-        this.videoPanel = document.querySelector('.video-panel');
-        this.container = document.querySelector('.container');
+    _initElements() {
+        this.elements = {
+            splitter: document.getElementById('splitter'),
+            chatPanel: document.getElementById('chat-panel'),
+            videoPanel: document.querySelector('.video-panel'),
+            container: document.querySelector('.container')
+        };
     }
 
-    bindEvents() {
+    _bindEvents() {
+        const { splitter } = this.elements;
+        
         // Mouse events
-        this.splitter.addEventListener('mousedown', (e) => this.startResize(e));
-        document.addEventListener('mousemove', (e) => this.resize(e));
-        document.addEventListener('mouseup', () => this.stopResize());
+        splitter.addEventListener('mousedown', (e) => this._startResize(e));
+        document.addEventListener('mousemove', (e) => this._resize(e));
+        document.addEventListener('mouseup', () => this._stopResize());
         
-        // Touch events for mobile
-        this.splitter.addEventListener('touchstart', (e) => this.startResize(e), { passive: false });
-        document.addEventListener('touchmove', (e) => this.resize(e), { passive: false });
-        document.addEventListener('touchend', () => this.stopResize());
+        // Touch events
+        splitter.addEventListener('touchstart', (e) => this._startResize(e), { passive: false });
+        document.addEventListener('touchmove', (e) => this._resize(e), { passive: false });
+        document.addEventListener('touchend', () => this._stopResize());
         
-        document.addEventListener('selectstart', (e) => this.preventSelection(e));
-        window.addEventListener('resize', () => this.handleResize());
+        // Prevent text selection during drag
+        document.addEventListener('selectstart', (e) => this._preventSelection(e));
         
-        // Listen for orientation changes
+        // Handle window resize
+        const debouncedResize = Utils.debounce(() => this._handleResize(), 100);
+        window.addEventListener('resize', debouncedResize);
+        
+        // Handle orientation changes
         window.addEventListener('orientationchange', () => {
-            setTimeout(() => this.handleResize(), 100);
+            setTimeout(() => this._handleResize(), CONSTANTS.UI_DELAYS.ORIENTATION_CHANGE);
         });
     }
 
-    handleResize() {
-        const wasMobile = this.isMobile;
-        const wasLandscape = this.isLandscape;
+    _handleResize() {
+        const prevState = { ...this.state };
         
-        this.isMobile = window.innerWidth <= this.config.mobile.breakpoint;
-        this.isLandscape = window.innerWidth > window.innerHeight;
+        this.state.isMobile = Utils.isMobile();
+        this.state.isLandscape = Utils.isLandscape();
         
-        // If switching between mobile/desktop or portrait/landscape, reset layout
-        if (wasMobile !== this.isMobile || (this.isMobile && wasLandscape !== this.isLandscape)) {
-            this.resetLayout();
+        // Reset layout if device type or orientation changed
+        if (this._shouldResetLayout(prevState)) {
+            this._resetLayout();
         }
     }
 
-    resetLayout() {
-        if (this.isMobile) {
-            if (this.isLandscape) {
-                // Mobile landscape - side by side like desktop
-                this.chatPanel.style.height = '';
-                this.videoPanel.style.height = '';
-                this.chatPanel.style.width = '280px';
+    _shouldResetLayout(prevState) {
+        return prevState.isMobile !== this.state.isMobile || 
+               (this.state.isMobile && prevState.isLandscape !== this.state.isLandscape);
+    }
+
+    _resetLayout() {
+        const { chatPanel, videoPanel } = this.elements;
+        const { isMobile, isLandscape } = this.state;
+        
+        if (isMobile) {
+            if (isLandscape) {
+                // Mobile landscape - horizontal layout
+                this._resetToHorizontal();
+                chatPanel.style.width = this.config.splitter.mobileLandscape.defaultChatWidth + 'px';
             } else {
-                // Mobile portrait - stacked
-                this.chatPanel.style.width = '';
-                this.chatPanel.style.height = '';
-                this.videoPanel.style.height = '';
+                // Mobile portrait - vertical layout
+                this._resetToVertical();
             }
         } else {
-            // Desktop - side by side
-            this.chatPanel.style.height = '';
-            this.videoPanel.style.height = '';
-            this.chatPanel.style.width = this.config.splitter.defaultChatWidth + 'px';
+            // Desktop - horizontal layout
+            this._resetToHorizontal();
+            chatPanel.style.width = this.config.splitter.defaultChatWidth + 'px';
         }
     }
 
-    startResize(e) {
-        this.isResizing = true;
+    _resetToHorizontal() {
+        const { chatPanel, videoPanel } = this.elements;
+        chatPanel.style.height = '';
+        videoPanel.style.height = '';
+    }
+
+    _resetToVertical() {
+        const { chatPanel, videoPanel } = this.elements;
+        chatPanel.style.width = '';
+        chatPanel.style.height = '';
+        videoPanel.style.height = '';
+    }
+
+    _startResize(e) {
+        this.state.isResizing = true;
         document.body.classList.add('dragging');
         
-        if (e.type === 'touchstart') {
-            this.startY = e.touches[0].clientY;
-            this.startX = e.touches[0].clientX;
+        const coords = this._getEventCoords(e);
+        this.state.startX = coords.x;
+        this.state.startY = coords.y;
+        
+        e.preventDefault();
+    }
+
+    _resize(e) {
+        if (!this.state.isResizing) return;
+        
+        const coords = this._getEventCoords(e);
+        const { isMobile, isLandscape } = this.state;
+        
+        if (isMobile && !isLandscape) {
+            this._resizeMobilePortrait(coords.y);
         } else {
-            this.startY = e.clientY;
-            this.startX = e.clientX;
+            this._resizeHorizontal(coords.x);
         }
         
         e.preventDefault();
     }
 
-    resize(e) {
-        if (!this.isResizing) return;
-        
-        let clientY, clientX;
-        if (e.type === 'touchmove') {
-            clientY = e.touches[0].clientY;
-            clientX = e.touches[0].clientX;
-        } else {
-            clientY = e.clientY;
-            clientX = e.clientX;
+    _getEventCoords(e) {
+        if (e.type.startsWith('touch')) {
+            return {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
         }
-
-        if (this.isMobile && !this.isLandscape) {
-            // Mobile portrait - vertical resize
-            this.resizeMobilePortrait(clientY);
-        } else {
-            // Desktop or mobile landscape - horizontal resize
-            this.resizeHorizontal(clientX);
-        }
-        
-        e.preventDefault();
+        return { x: e.clientX, y: e.clientY };
     }
 
-    resizeMobilePortrait(clientY) {
-        const containerRect = this.container.getBoundingClientRect();
+    _resizeMobilePortrait(clientY) {
+        const { container, videoPanel, chatPanel } = this.elements;
+        const containerRect = container.getBoundingClientRect();
         const containerHeight = containerRect.height;
-        const splitterHeight = 8;
+        const splitterHeight = CONSTANTS.SPLITTER.HEIGHT;
         
         const mouseY = clientY - containerRect.top;
-        let newVideoHeight = mouseY;
+        const constraints = this._getVerticalConstraints(containerHeight, splitterHeight);
         
-        const minVideoHeight = this.config.splitter.minVideoHeight;
-        const minChatHeight = this.config.splitter.minChatHeight;
-        const maxVideoHeight = containerHeight - minChatHeight - splitterHeight;
-        
-        newVideoHeight = Math.max(minVideoHeight, Math.min(maxVideoHeight, newVideoHeight));
+        const newVideoHeight = Math.max(
+            constraints.minVideoHeight, 
+            Math.min(constraints.maxVideoHeight, mouseY)
+        );
         
         const videoHeightPercent = (newVideoHeight / containerHeight) * 100;
         const chatHeightPercent = ((containerHeight - newVideoHeight - splitterHeight) / containerHeight) * 100;
         
-        this.videoPanel.style.height = videoHeightPercent + '%';
-        this.chatPanel.style.height = chatHeightPercent + '%';
+        videoPanel.style.height = videoHeightPercent + '%';
+        chatPanel.style.height = chatHeightPercent + '%';
     }
 
-    resizeHorizontal(clientX) {
-        const containerRect = this.container.getBoundingClientRect();
+    _getVerticalConstraints(containerHeight, splitterHeight) {
+        return {
+            minVideoHeight: this.config.splitter.minVideoHeight,
+            minChatHeight: this.config.splitter.minChatHeight,
+            maxVideoHeight: containerHeight - this.config.splitter.minChatHeight - splitterHeight
+        };
+    }
+
+    _resizeHorizontal(clientX) {
+        const { container, chatPanel } = this.elements;
+        const containerRect = container.getBoundingClientRect();
         const mouseX = clientX - containerRect.left;
         const containerWidth = containerRect.width;
-        const splitterWidth = 8;
+        const splitterWidth = CONSTANTS.SPLITTER.WIDTH;
         
+        const constraints = this._getHorizontalConstraints(containerWidth, splitterWidth);
         let newChatWidth = containerWidth - mouseX - splitterWidth;
         
-        // Adjust minimum widths for mobile landscape
-        const minChatWidth = this.isMobile && this.isLandscape ? 150 : this.config.splitter.minChatWidth;
-        const minVideoWidth = this.isMobile && this.isLandscape ? 250 : this.config.splitter.minVideoWidth;
-        const maxChatWidth = containerWidth - minVideoWidth - splitterWidth;
+        newChatWidth = Math.max(
+            constraints.minChatWidth,
+            Math.min(constraints.maxChatWidth, newChatWidth)
+        );
         
-        newChatWidth = Math.max(minChatWidth, Math.min(maxChatWidth, newChatWidth));
-        this.chatPanel.style.width = newChatWidth + 'px';
+        chatPanel.style.width = newChatWidth + 'px';
     }
 
-    stopResize() {
-        if (this.isResizing) {
-            this.isResizing = false;
+    _getHorizontalConstraints(containerWidth, splitterWidth) {
+        const { isMobile, isLandscape } = this.state;
+        const config = this.config.splitter;
+        
+        if (isMobile && isLandscape) {
+            return {
+                minChatWidth: config.mobileLandscape.minChatWidth,
+                minVideoWidth: config.mobileLandscape.minVideoWidth,
+                maxChatWidth: containerWidth - config.mobileLandscape.minVideoWidth - splitterWidth
+            };
+        }
+        
+        return {
+            minChatWidth: config.minChatWidth,
+            minVideoWidth: config.minVideoWidth,
+            maxChatWidth: containerWidth - config.minVideoWidth - splitterWidth
+        };
+    }
+
+    _stopResize() {
+        if (this.state.isResizing) {
+            this.state.isResizing = false;
             document.body.classList.remove('dragging');
         }
     }
 
-    preventSelection(e) {
-        if (this.isResizing) e.preventDefault();
+    _preventSelection(e) {
+        if (this.state.isResizing) {
+            e.preventDefault();
+        }
     }
 }
 
