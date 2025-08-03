@@ -202,6 +202,7 @@ html, body {
 }
 
 /* --- iOS Scroll Helper --- */
-body.ios-scroll-helper {
-    padding-top: 1px;
+body.ios-scroll-helper .container {
+    /* This makes the container slightly taller than the viewport, forcing it to be scrollable */
+    height: calc(100% + 1px);
 }
