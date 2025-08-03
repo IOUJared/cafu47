@@ -15,7 +15,10 @@ export async function onRequest(context) {
     const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET } = env;
 
     if (!TWITCH_CLIENT_ID || !TWITCH_CLIENT_SECRET) {
-        return new Response(JSON.stringify({ error: 'API credentials are not configured.' }), { status: 500 });
+        return new Response(JSON.stringify({ error: 'API credentials are not configured.' }), { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     const url = new URL(request.url);
@@ -23,7 +26,10 @@ export async function onRequest(context) {
     const hostChannel = url.searchParams.get('host_channel');
 
     if (!mainChannel) {
-        return new Response(JSON.stringify({ error: 'No channel provided.' }), { status: 400 });
+        return new Response(JSON.stringify({ error: 'No channel provided.' }), { 
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     try {
@@ -48,38 +54,38 @@ export async function onRequest(context) {
         const userResponse = await fetch(`https://api.twitch.tv/helix/users?login=${mainChannel}`, { headers });
         if (!userResponse.ok) throw new Error('Failed to fetch user data.');
         const userData = await userResponse.json();
-        const broadcasterId = userData.data[0]?.id;
+        const broadcaster = userData.data[0];
 
         let suggestions = [];
-        if (broadcasterId) {
-            const channelResponse = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcasterId}`, { headers });
+        if (broadcaster) {
+            const channelResponse = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcaster.id}`, { headers });
+            let gameId = null;
             if (channelResponse.ok) {
                 const channelData = await channelResponse.json();
-                const gameId = channelData.data[0]?.game_id;
-                const languageFilter = 'language=en';
-
-                let suggestedStreamsData;
-                if (gameId) {
-                    const suggestedStreamsResponse = await fetch(`https://api.twitch.tv/helix/streams?game_id=${gameId}&${languageFilter}&first=6`, { headers });
-                    if (suggestedStreamsResponse.ok) {
-                        suggestedStreamsData = await suggestedStreamsResponse.json();
-                    }
-                } else {
-                    const suggestedStreamsResponse = await fetch(`https://api.twitch.tv/helix/streams?${languageFilter}&first=6`, { headers });
-                     if (suggestedStreamsResponse.ok) {
-                        suggestedStreamsData = await suggestedStreamsResponse.json();
-                    }
+                // **FIX:** Check if channel data and game_id exist before using them.
+                if (channelData.data && channelData.data.length > 0) {
+                    gameId = channelData.data[0].game_id;
                 }
+            }
 
-                if (suggestedStreamsData) {
-                    suggestions = suggestedStreamsData.data
-                        .filter(stream => stream.user_login.toLowerCase() !== mainChannel.toLowerCase())
-                        .slice(0, 5)
-                        .map(stream => ({
-                            channel: stream.user_login.toLowerCase(),
-                            label: stream.user_name,
-                        }));
-                }
+            const languageFilter = 'language=en';
+            let suggestedStreamsData;
+            let suggestionUrl = `https://api.twitch.tv/helix/streams?${languageFilter}&first=6`;
+
+            if (gameId) {
+                suggestionUrl = `https://api.twitch.tv/helix/streams?game_id=${gameId}&${languageFilter}&first=6`;
+            }
+            
+            const suggestedStreamsResponse = await fetch(suggestionUrl, { headers });
+            if (suggestedStreamsResponse.ok) {
+                suggestedStreamsData = await suggestedStreamsResponse.json();
+                suggestions = suggestedStreamsData.data
+                    .filter(stream => stream.user_login.toLowerCase() !== mainChannel.toLowerCase())
+                    .slice(0, 5)
+                    .map(stream => ({
+                        channel: stream.user_login.toLowerCase(),
+                        label: stream.user_name,
+                    }));
             }
         }
         
@@ -94,6 +100,9 @@ export async function onRequest(context) {
 
     } catch (error) {
         console.error('Error in Cloudflare function:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 }

@@ -66,6 +66,13 @@ export class TwitchEmbed {
         try {
             const hostChannel = TWITCH_CONFIG.autohost.host_channel;
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&host_channel=${hostChannel}`);
+            
+            // **FIX:** Add error handling to prevent JSON parsing errors on server failure.
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
+            }
+            
             const data = await response.json();
 
             if (!data.mainChannelLive && data.hostChannelLive) {
@@ -189,7 +196,6 @@ export class TwitchEmbed {
             }
             this.statusMonitorCleanup = this.streamStatus.monitorPlayer(this.player);
 
-            // **FIX:** Check initial status only after the player is fully ready.
             setTimeout(() => this._checkInitialStatus(), CONSTANTS.STREAM_STATUS.INITIAL_CHECK_DELAY);
         });
 

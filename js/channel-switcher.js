@@ -39,17 +39,15 @@ export class ChannelSwitcher {
         this.elements.suggestionsContainer.innerHTML = '';
         
         try {
-            // Use an absolute path for the API endpoint for robustness.
             const apiEndpoint = '/functions/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
+            // **FIX:** Add error handling to prevent JSON parsing errors on server failure.
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
             }
             
-            // **FIX:** The function now returns an object, so we need to parse it
-            // and get the 'suggestions' array from it.
             const data = await response.json();
             const liveChannels = data.suggestions;
 
