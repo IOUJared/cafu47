@@ -201,31 +201,38 @@ html, body {
     }
 }
 
-/* Mobile landscape mode - side by side like desktop */
+/* Mobile landscape mode - aggressive full screen like Twitch app */
 @media screen and (max-width: 768px) and (orientation: landscape) {
     .container {
         flex-direction: row !important;
-        /* Extend into safe areas for landscape */
+        /* Extend completely into safe areas for landscape - no padding */
         margin-left: calc(-1 * env(safe-area-inset-left));
         margin-right: calc(-1 * env(safe-area-inset-right));
+        margin-top: calc(-1 * env(safe-area-inset-top));
+        margin-bottom: calc(-1 * env(safe-area-inset-bottom));
         width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
+        height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        /* Remove any padding that creates white space */
+        padding: 0 !important;
     }
     
     .video-panel {
         flex: 1 !important;
         height: 100% !important;
         width: auto !important;
-        min-width: 300px;
+        min-width: 250px;
         /* Reset margins for landscape */
-        margin-left: 0;
-        margin-right: 0;
-        width: auto;
+        margin: 0;
+        /* Ensure video panel fills completely */
+        overflow: hidden;
     }
     
     .chat-panel {
         width: 280px !important;
         height: 100% !important;
-        min-width: 200px;
+        min-width: 180px;
+        /* Ensure chat is within safe area */
+        margin-right: env(safe-area-inset-right);
     }
     
     .splitter {
@@ -239,22 +246,61 @@ html, body {
         height: 30px !important;
     }
     
-    /* Adjust video wrapper for landscape */
+    /* Video container fills completely with overflow cropping */
+    .video-container {
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        /* Remove any centering that creates gaps */
+        align-items: stretch !important;
+        justify-content: stretch !important;
+    }
+    
+    /* Aggressive video wrapper - fills and overflows if needed */
     .video-wrapper {
         width: 100% !important;
         height: 100% !important;
+        /* Allow overflow to eliminate any gaps */
+        overflow: hidden !important;
+        position: relative !important;
     }
     
-    /* Remove the aspect ratio constraint in landscape mobile */
+    /* Remove the aspect ratio constraint completely in landscape mobile */
     .video-wrapper::before {
         display: none !important;
     }
     
-    /* Let video fill container in landscape mobile */
+    /* Video fills completely, crops if necessary - like Twitch app */
     #twitch-video {
-        position: static !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
         width: 100% !important;
         height: 100% !important;
+        /* Transform to center and ensure full coverage */
+        transform: translate(-50%, -50%) !important;
+        /* Make sure video covers the entire area, cropping if needed */
+        object-fit: cover !important;
+        /* Scale up slightly to ensure no gaps */
+        min-width: 101% !important;
+        min-height: 101% !important;
+    }
+    
+    /* Hide chat completely in landscape if screen is very narrow */
+    .mobile-hide-chat .chat-panel,
+    .mobile-hide-chat .splitter {
+        display: none !important;
+    }
+    
+    .mobile-hide-chat .video-panel {
+        width: 100% !important;
+        /* Full screen video with complete safe area extension */
+        margin-left: calc(-1 * env(safe-area-inset-left)) !important;
+        margin-right: calc(-1 * env(safe-area-inset-right)) !important;
+        margin-top: calc(-1 * env(safe-area-inset-top)) !important;
+        margin-bottom: calc(-1 * env(safe-area-inset-bottom)) !important;
+        width: calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right)) !important;
+        height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom)) !important;
     }
 }
 
@@ -269,7 +315,7 @@ html, body {
     }
 }
 
-/* Landscape phones - prioritize video */
+/* Landscape phones - prioritize video, minimal chat */
 @media screen and (max-width: 568px) and (orientation: landscape) {
     .chat-panel {
         width: 200px !important;
@@ -277,7 +323,34 @@ html, body {
     }
     
     .video-panel {
-        min-width: 250px !important;
+        min-width: 200px !important;
+    }
+    
+    /* For very narrow landscape screens, consider auto-hiding chat */
+    .container {
+        /* Even more aggressive full-screen approach */
+        padding: 0 !important;
+        margin: calc(-1 * env(safe-area-inset-top)) calc(-1 * env(safe-area-inset-right)) calc(-1 * env(safe-area-inset-bottom)) calc(-1 * env(safe-area-inset-left)) !important;
+        width: calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right)) !important;
+        height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* Ultra-wide landscape phones - full immersion */
+@media screen and (max-width: 768px) and (orientation: landscape) and (max-height: 400px) {
+    /* For phones with very wide aspect ratios like iPhone 16 Pro */
+    .chat-panel {
+        width: 180px !important;
+        min-width: 120px !important;
+    }
+    
+    /* Make video even more aggressive */
+    #twitch-video {
+        /* Scale up more to ensure complete coverage */
+        min-width: 102% !important;
+        min-height: 102% !important;
+        /* Slight zoom to eliminate any possible gaps */
+        transform: translate(-50%, -50%) scale(1.01) !important;
     }
 }
 
