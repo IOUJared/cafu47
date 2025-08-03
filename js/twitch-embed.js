@@ -1,3 +1,5 @@
+// js/twitch-embed.js
+
 import { CONSTANTS } from './constants.js';
 import { Utils } from './utils.js';
 import { URLManager } from './url-manager.js';
@@ -56,7 +58,8 @@ export class TwitchEmbed {
             this.createChatEmbed();
         }
         
-        setTimeout(() => this.maintainAspectRatio(), 0);
+        // Increased delay for Safari
+        setTimeout(() => this.maintainAspectRatio(), 100); 
     }
 
     _setupLayout() {
@@ -91,16 +94,15 @@ export class TwitchEmbed {
         const panelAspectRatio = panelWidth / panelHeight;
         const targetAspectRatio = CONSTANTS.ASPECT_RATIO.TARGET;
 
+        // Reset styles
         videoWrapper.style.width = '100%';
         videoWrapper.style.height = '100%';
 
         if (panelAspectRatio > targetAspectRatio) {
             const newWidth = panelHeight * targetAspectRatio;
             videoWrapper.style.width = `${newWidth}px`;
-            videoWrapper.style.height = `${panelHeight}px`;
         } else {
             const newHeight = panelWidth / targetAspectRatio;
-            videoWrapper.style.width = `${panelWidth}px`;
             videoWrapper.style.height = `${newHeight}px`;
         }
     }
@@ -111,7 +113,6 @@ export class TwitchEmbed {
             videoContainer.innerHTML = '';
         }
 
-        // Define all allowed parent domains for the video embed for robustness
         const allowedDomains = ["cafu47.com", "www.cafu47.com", "cafu47.pages.dev", "localhost"];
 
         this.embed = new Twitch.Embed("twitch-video", {
@@ -174,7 +175,6 @@ export class TwitchEmbed {
         const currentDomain = window.location.hostname;
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
         
-        // **FIX:** Removed the obsolete "&migration=1" parameter from the URL.
         chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}`;
     }
 
