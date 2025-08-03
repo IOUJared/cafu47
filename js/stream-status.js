@@ -10,6 +10,7 @@ class StreamStatusManager {
 
     setOnline() {
         if (!this.isOnline) {
+            console.log('Stream status: ONLINE');
             this.isOnline = true;
             this.notifyStatusChange('online');
         }
@@ -17,6 +18,7 @@ class StreamStatusManager {
 
     setOffline() {
         if (this.isOnline) {
+            console.log('Stream status: OFFLINE');
             this.isOnline = false;
             this.notifyStatusChange('offline');
         }
@@ -45,27 +47,44 @@ class StreamStatusManager {
     monitorPlayer(player) {
         if (!player) return;
 
+        let consecutiveOfflineChecks = 0;
+        const maxConsecutiveChecks = 3; // Require 3 consecutive offline checks before hiding UI
+
         // Check if stream appears to be offline
         const checkOfflineStatus = () => {
             try {
                 const isPaused = player.isPaused();
                 const hasEnded = player.getEnded();
-                const quality = player.getQuality();
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
                 
-                // If video is paused, ended, and no quality options, likely offline
-                if (isPaused && hasEnded && (!quality || quality === 'auto')) {
-                    this.setOffline();
+                // Multiple indicators that stream is offline
+                const seemsOffline = isPaused && hasEnded;
+                const noProgress = currentTime === 0 && duration === 0;
+                const stalled = isPaused && currentTime > 0 && hasEnded;
+                
+                if (seemsOffline || noProgress || stalled) {
+                    consecutiveOfflineChecks++;
+                    console.log(`Offline check ${consecutiveOfflineChecks}/${maxConsecutiveChecks}`);
+                    
+                    // Only set offline after multiple consecutive checks
+                    if (consecutiveOfflineChecks >= maxConsecutiveChecks) {
+                        this.setOffline();
+                    }
                 } else {
+                    // Reset counter if stream seems online
+                    consecutiveOfflineChecks = 0;
                     this.setOnline();
                 }
             } catch (error) {
-                // If we can't get player state, assume online
-                console.log('Could not check player status');
+                // If we can't get player state, don't change status
+                console.log('Could not check player status:', error);
+                consecutiveOfflineChecks = 0;
             }
         };
 
-        // Check status periodically
-        const statusInterval = setInterval(checkOfflineStatus, 10000); // Check every 10 seconds
+        // Check status less frequently to avoid false positives
+        const statusInterval = setInterval(checkOfflineStatus, 15000); // Check every 15 seconds
 
         // Return cleanup function
         return () => clearInterval(statusInterval);

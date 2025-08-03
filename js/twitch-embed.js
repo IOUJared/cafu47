@@ -1,14 +1,19 @@
 class TwitchEmbed {
     constructor(config, showChat = true) {
         this.config = config;
+        this.originalChannel = config.channel.toLowerCase(); // Store original channel
         this.showChat = showChat;
         this.embed = null;
         this.player = null;
         this.streamStatus = new StreamStatusManager();
         this.channelSwitcher = null;
         this.statusMonitorCleanup = null;
-
+        
+        // Initialize URL manager
+        this.urlManager = new URLManager(this.originalChannel);
+        
         this.setupStatusHandling();
+        this.setupURLHandling();
     }
 
     setupStatusHandling() {
@@ -19,6 +24,23 @@ class TwitchEmbed {
                 this.hideChannelSwitcher();
             }
         });
+    }
+
+    setupURLHandling() {
+        // Listen for URL-driven channel changes (back/forward navigation)
+        this.urlManager.onChannelChange((channel, fromURLUpdate) => {
+            if (fromURLUpdate === false) {
+                // This change came from URL navigation, update the embed
+                this.config.channel = channel;
+                this.recreateEmbed();
+            }
+        });
+
+        // Check if we should start with a different channel from URL
+        const urlChannel = this.urlManager.getCurrentChannel();
+        if (urlChannel !== this.originalChannel) {
+            this.config.channel = urlChannel;
+        }
     }
 
     init() {
@@ -171,17 +193,7 @@ class TwitchEmbed {
         }
     }
 
-    async changeChannel(newChannel) {
-        if (!newChannel || newChannel === this.config.channel) return;
-
-        // Update config
-        this.config.channel = newChannel;
-
-        // Update channel switcher
-        if (this.channelSwitcher) {
-            this.channelSwitcher.updateCurrentChannel(newChannel);
-        }
-
+    recreateEmbed() {
         // Recreate video embed
         this.createVideoEmbed();
 
@@ -190,10 +202,48 @@ class TwitchEmbed {
             this.createChatEmbed();
         }
 
-        // Hide the switcher (will show again if new channel is also offline)
+        // Update channel switcher if it exists
+        if (this.channelSwitcher) {
+            this.channelSwitcher.updateCurrentChannel(this.config.channel);
+        }
+
+        // Hide the switcher
         this.hideChannelSwitcher();
+    }
+
+    async changeChannel(newChannel) {
+        if (!newChannel || newChannel.toLowerCase() === this.config.channel.toLowerCase()) {
+            return;
+        }
+
+        const normalizedChannel = newChannel.toLowerCase();
+
+        // Update config
+        this.config.channel = normalizedChannel;
+
+        // Update URL (this will automatically update the hash)
+        this.urlManager.setChannel(normalizedChannel, true);
+
+        // Recreate the embed
+        this.recreateEmbed();
 
         return Promise.resolve();
+    }
+
+    getCurrentChannel() {
+        return this.config.channel;
+    }
+
+    getOriginalChannel() {
+        return this.originalChannel;
+    }
+
+    isOnOriginalChannel() {
+        return this.config.channel.toLowerCase() === this.originalChannel;
+    }
+
+    getCurrentURL() {
+        return this.urlManager.getCurrentURL();
     }
 
     destroy() {

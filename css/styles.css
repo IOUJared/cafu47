@@ -162,17 +162,17 @@ html, body {
 
 /* Stream offline UI */
 .stream-offline-ui {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background: linear-gradient(135deg, rgba(20, 20, 25, 0.95), rgba(9, 9, 11, 0.98));
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
+    z-index: 1000;
     color: white;
     animation: fadeIn 0.3s ease-out;
 }
@@ -398,6 +398,24 @@ html, body {
     .offline-content p {
         font-size: 0.9rem;
     }
+}
+
+.url-info {
+    margin-top: 1rem;
+    color: #9ca3af;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.url-info small {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Prevent body scroll when offline UI is shown */
+body.offline-ui-active {
+    overflow: hidden;
 }
 
 /* Touch-friendly controls */

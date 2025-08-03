@@ -44,6 +44,9 @@ class ChannelSwitcher {
                             <button class="suggestion-btn" data-channel="sodapoppin">Sodapoppin</button>
                         </div>
                     </div>
+                    <div class="url-info">
+                        <small>💡 URL will update to reflect the current channel</small>
+                    </div>
                 </div>
             </div>
         `;
@@ -137,11 +140,10 @@ class ChannelSwitcher {
     show() {
         if (this.isVisible) return;
 
-        const videoWrapper = document.querySelector('.video-wrapper');
-        if (!videoWrapper) return;
-
+        // Always append to body for full viewport coverage
         this.createUI();
-        videoWrapper.appendChild(this.ui);
+        document.body.appendChild(this.ui);
+        document.body.classList.add('offline-ui-active');
         this.isVisible = true;
 
         // Focus input after a short delay
@@ -155,6 +157,7 @@ class ChannelSwitcher {
         if (!this.isVisible || !this.ui) return;
 
         this.ui.remove();
+        document.body.classList.remove('offline-ui-active');
         this.isVisible = false;
         this.clearError();
     }
