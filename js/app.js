@@ -4,6 +4,7 @@ import { TWITCH_CONFIG } from './config.js';
 import { Utils } from './utils.js';
 import { TwitchEmbed } from './twitch-embed.js';
 import { ResizableSplitter } from './splitter.js';
+import { MobileBrowserUIHider } from './mobile-ui-hider.js';
 
 // Determine if chat should be shown based on URL parameters and mobile settings
 const URLParams = new URLSearchParams(window.location.search);
@@ -25,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add a specific class for mobile layouts where chat is hidden
     if (isMobile && !effectiveShowChat) {
         document.querySelector('.container')?.classList.add('mobile-hide-chat');
+    }
+
+    // Initialize the mobile UI hider
+    if (isMobile) {
+        new MobileBrowserUIHider();
     }
 
     // Make the main embed instance globally accessible for debugging purposes
