@@ -32,6 +32,8 @@ export class ChannelSwitcher {
         };
     }
 
+    // js/channel-switcher.js
+
     async _loadLiveSuggestions() {
         if (!this.elements.suggestionsContainer) return;
 
@@ -42,19 +44,13 @@ export class ChannelSwitcher {
             const apiEndpoint = '/functions/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
+            const responseBody = await response.text();
+
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Server returned an error: ${response.status}. Body: ${errorText}`);
+                throw new Error(`Server responded with ${response.status}. Body: ${responseBody}`);
             }
             
-            const responseText = await response.text();
-            let data;
-            try {
-                data = JSON.parse(responseText);
-            } catch (e) {
-                throw new Error(`Failed to parse JSON response. Response was: ${responseText}`);
-            }
-
+            const data = JSON.parse(responseBody);
             const liveChannels = data.suggestions;
 
             if (liveChannels && liveChannels.length > 0) {
@@ -66,7 +62,7 @@ export class ChannelSwitcher {
 
         } catch (error) {
             console.error('Failed to load live channels:', error);
-            this.elements.suggestionLabel.textContent = 'Could not find related live channels.';
+            this.elements.suggestionLabel.textContent = 'Could not load related live channels.';
         }
     }
 

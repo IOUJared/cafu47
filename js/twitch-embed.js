@@ -62,6 +62,8 @@ export class TwitchEmbed {
         }
     }
 
+    // js/twitch-embed.js
+
     async _handleOfflineState() {
         if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
             this.showChannelSwitcher();
@@ -72,18 +74,14 @@ export class TwitchEmbed {
             const familyQuery = TWITCH_CONFIG.fuFamily.join(',');
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
             
+            const responseBody = await response.text(); // Always get the body first
+
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Server returned an error: ${response.status}. Body: ${errorText}`);
+                // Throw an error with the status and body for better debugging
+                throw new Error(`Server responded with ${response.status}. Body: ${responseBody}`);
             }
             
-            const responseText = await response.text();
-            let data;
-            try {
-                data = JSON.parse(responseText);
-            } catch (e) {
-                throw new Error(`Failed to parse JSON response. Response was: ${responseText}`);
-            }
+            const data = JSON.parse(responseBody); // Now parse the body
 
             if (data && data.liveFamilyMember) {
                 this.changeChannel(data.liveFamilyMember, true);
@@ -91,7 +89,7 @@ export class TwitchEmbed {
                 this.showChannelSwitcher();
             }
         } catch (error) {
-            console.error("Could not check for Fu's Family host:", error);
+            console.error("Could not check for auto-host:", error);
             this.showChannelSwitcher();
         }
     }
