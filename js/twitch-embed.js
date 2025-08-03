@@ -54,7 +54,6 @@ export class TwitchEmbed {
         if (status === 'offline') {
             await this._handleOfflineState();
         } else {
-            // If the stream comes online, ensure we are on the main channel
             if (this.config.channel !== this.mainChannel) {
                 this.changeChannel(this.mainChannel, false);
             }
@@ -64,7 +63,6 @@ export class TwitchEmbed {
     }
 
     async _handleOfflineState() {
-        // Only check for hosts if we are currently on the main channel
         if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
             this.showChannelSwitcher();
             return;
@@ -75,19 +73,26 @@ export class TwitchEmbed {
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
             
             if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`Server returned an error: ${response.status}. Body: ${errorText}`);
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error(`Failed to parse JSON response. Response was: ${responseText}`);
+            }
 
-            if (data.liveFamilyMember) {
+            if (data && data.liveFamilyMember) {
                 this.changeChannel(data.liveFamilyMember, true);
             } else {
                 this.showChannelSwitcher();
             }
         } catch (error) {
             console.error("Could not check for Fu's Family host:", error);
-            this.showChannelSwitcher(); // Fallback to offline UI on error
+            this.showChannelSwitcher();
         }
     }
 
@@ -128,6 +133,9 @@ export class TwitchEmbed {
     }
 
     _calculateDesktopAspectRatio(videoWrapper) {
+        const videoPanel = document.querySelector('.video-panel');
+        if (!videoPanel) return;
+        const { width: panelWidth, height: panelHeight }_calculateDesktopAspectRatio(videoWrapper) {
         const videoPanel = document.querySelector('.video-panel');
         if (!videoPanel) return;
         const { width: panelWidth, height: panelHeight } = videoPanel.getBoundingClientRect();

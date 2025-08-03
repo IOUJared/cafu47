@@ -58,7 +58,7 @@ export async function onRequest(context) {
             }
         }
 
-        // Fetch suggestions (remains the same)
+        // Fetch suggestions
         const userResponse = await fetch(`https://api.twitch.tv/helix/users?login=${mainChannel}`, { headers });
         let suggestions = [];
         if (userResponse.ok) {
