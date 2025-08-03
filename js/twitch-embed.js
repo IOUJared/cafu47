@@ -45,6 +45,15 @@ export class TwitchEmbed {
             });
         }
         
+        // Add click handler to dismiss banner early
+        if (this.hostingBanner) {
+            this.hostingBanner.addEventListener('click', (e) => {
+                if (e.target === this.hostingBanner || e.target.closest('.hosting-content')) {
+                    this.hostingBanner.classList.add('hidden');
+                }
+            });
+        }
+        
         const urlChannel = this.urlManager.getCurrentChannel();
         if (urlChannel !== this.mainChannel) {
             this.config.channel = urlChannel;
@@ -169,8 +178,17 @@ export class TwitchEmbed {
             if (isHosting) {
                 this.hostedChannelSpan.textContent = channelDisplayName;
                 this.hostingBanner.classList.remove('hidden');
+                this.hostingBanner.classList.remove('auto-hide');
+                
+                // Auto-hide after stream starts playing (with delay)
+                setTimeout(() => {
+                    if (!this.hostingBanner.classList.contains('hidden')) {
+                        this.hostingBanner.classList.add('auto-hide');
+                    }
+                }, 2000); // Wait 2 seconds before starting the 7-second auto-hide timer
             } else {
                 this.hostingBanner.classList.add('hidden');
+                this.hostingBanner.classList.remove('auto-hide');
             }
         }
     }

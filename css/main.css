@@ -39,49 +39,85 @@ html, body {
     color: var(--md-on-background-color);
 }
 
-/* --- Hosting Banner --- */
+/* --- Hosting Banner (New Circular Design) --- */
 .hosting-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: var(--md-primary-variant-color);
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(141, 110, 99, 0.95);
     color: var(--md-on-primary-color);
     padding: 8px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 20px;
     z-index: 1001;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 500;
     box-shadow: var(--md-shadow-2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .hosting-banner.hidden {
-    display: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.hosting-banner.auto-hide {
+    animation: autoHideBanner 0.5s ease forwards;
+    animation-delay: 7s;
+}
+
+@keyframes autoHideBanner {
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+    }
 }
 
 .hosting-content {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.hosting-content svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.hosting-content span {
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .change-channel-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--md-on-primary-color);
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
     transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .change-channel-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
 }
-
 
 /* --- Layout Containers --- */
 .container {
@@ -94,11 +130,6 @@ html, body {
     top: 0;
     left: 0;
     background: var(--md-background-color);
-}
-
-.hosting-banner ~ .container {
-    top: 38px; /* Adjust based on banner height */
-    height: calc(100% - 38px);
 }
 
 .video-panel {
@@ -216,13 +247,20 @@ html, body {
 /* --- Mobile Layout (Portrait & Landscape) --- */
 @media screen and (max-width: 768px) {
     .hosting-banner {
-        flex-direction: column;
-        gap: 8px;
-        padding: 8px;
+        top: 12px;
+        left: 12px;
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        max-width: 160px;
     }
-    .hosting-banner ~ .container {
-        top: 60px;
-        height: calc(100% - 60px);
+    
+    .hosting-content span {
+        font-size: 0.7rem;
+    }
+    
+    .change-channel-btn {
+        font-size: 0.65rem;
+        padding: 3px 6px;
     }
 
     #fullscreen-btn {
@@ -242,6 +280,12 @@ html, body {
     /* Hide buttons when in native fullscreen */
     :fullscreen .ui-btn,
     :-webkit-full-screen .ui-btn {
+        display: none !important;
+    }
+    
+    /* Hide hosting banner when in fullscreen */
+    :fullscreen .hosting-banner,
+    :-webkit-full-screen .hosting-banner {
         display: none !important;
     }
     
