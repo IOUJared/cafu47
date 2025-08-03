@@ -6,7 +6,8 @@ const getAppAccessToken = async (clientId, clientSecret) => {
     if (!response.ok) {
         throw new Error(`Failed to get Twitch token: ${response.statusText}`);
     }
-    return (await response.json()).access_token;
+    const json = await response.json();
+    return json.access_token;
 };
 
 export async function onRequest(context) {
@@ -37,22 +38,25 @@ export async function onRequest(context) {
         };
 
         const allChannels = [mainChannel, ...familyChannels];
-        const streamsQuery = allChannels.map(c => `user_login=${c}`).join('&');
+        const streamsQuery = allChannels.map(c => `user_login=${c.trim()}`).join('&');
         
         const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?${streamsQuery}`, { headers });
-        if (!streamsResponse.ok) throw new Error('Failed to fetch stream data.');
+        if (!streamsResponse.ok) {
+            const errorText = await streamsResponse.text();
+            throw new Error(`Failed to fetch stream data from Twitch: ${streamsResponse.status} ${errorText}`);
+        }
         
         const streamsData = await streamsResponse.json();
-        const liveUserLogins = streamsData.data.map(s => s.user_login.toLowerCase());
+        const liveUserLogins = new Set(streamsData.data.map(s => s.user_login.toLowerCase()));
 
-        const mainChannelLive = liveUserLogins.includes(mainChannel.toLowerCase());
+        const mainChannelLive = liveUserLogins.has(mainChannel.toLowerCase());
         let liveFamilyMember = null;
 
         if (!mainChannelLive) {
             for (const member of familyChannels) {
-                if (liveUserLogins.includes(member.toLowerCase())) {
+                if (liveUserLogins.has(member.toLowerCase())) {
                     liveFamilyMember = member;
-                    break; 
+                    break;
                 }
             }
         }
@@ -94,12 +98,12 @@ export async function onRequest(context) {
             suggestions
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         });
 
     } catch (error) {
         console.error('Error in Cloudflare function:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: error.message, stack: error.stack }), {
             status: 500, headers: { 'Content-Type': 'application/json' }
         });
     }
