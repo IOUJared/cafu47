@@ -10,16 +10,17 @@
   Referrer-Policy: strict-origin-when-cross-origin
 
   # Permissions Policy for embedded features
-  # This version correctly allows both the video and chat frames to use required permissions.
-  Permissions-Policy: autoplay=(self https://player.twitch.tv), fullscreen=(self https://player.twitch.tv https://www.twitch.tv)
+  # This version explicitly allows the Twitch player and chat frames to autoplay and go fullscreen.
+  Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv" "https://www.twitch.tv")
 
   # Content Security Policy (CSP)
-  # This version adds the domains needed for Twitch's analytics, ads, and other third-party scripts.
+  # This version explicitly adds all the domains that were being blocked in the console logs.
   Content-Security-Policy:
     default-src 'self';
-    script-src 'self' https:;
+    script-src 'self' https://embed.twitch.tv https://static.cloudflareinsights.com https://d2v02itv0y9u9t.cloudfront.net https://sb.scorecardresearch.com;
     style-src 'self' 'unsafe-inline';
     frame-src 'self' https://player.twitch.tv https://www.twitch.tv;
     connect-src 'self' https: wss:;
     img-src 'self' data: https:;
     media-src blob: https:;
+    font-src 'self' https: data:;

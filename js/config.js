@@ -34,8 +34,8 @@ const TWITCH_CONFIG = {
     },
     channelSwitcher: {
         suggestions: [
-            { channel: 'xqc', label: 'xQc' },
-            { channel: 'shroud', label: 'Shroud' },
+            { channel: 'fuslie', label: 'Fuslie' },
+            { channel: 'robcdee', label: 'robcdee' },
             { channel: 'pokimane', label: 'Pokimane' },
             { channel: 'sodapoppin', label: 'Sodapoppin' }
         ]
