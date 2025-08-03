@@ -40,14 +40,12 @@ class ChannelSwitcher {
         const staticChannels = this.config.suggestions.map(s => s.channel);
         
         try {
-            // This relative path works for both local dev with Wrangler and production
-            const apiEndpoint = 'get-live-streams';
+            // This is the correct endpoint path for a Cloudflare Function
+            const apiEndpoint = '/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channels=${staticChannels.join(',')}`);
             
             if (!response.ok) {
-                // Provide a more detailed error for easier debugging
-                const errorText = await response.text();
-                throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
+                throw new Error(`Network response was not ok (${response.status})`);
             }
             
             const liveChannels = await response.json();
