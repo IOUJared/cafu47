@@ -1,6 +1,5 @@
 # This file defines custom HTTP headers for your Cloudflare Pages site.
-# For more information, see:
-# https://developers.cloudflare.com/pages/platform/headers/
+# For more information, see: https://developers.cloudflare.com/pages/platform/headers/
 
 /*
   X-Frame-Options: SAMEORIGIN
