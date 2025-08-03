@@ -1,37 +1,33 @@
-/* Cyber Noir Themed Splitter */
+/* css/splitter.css */
+
 .splitter {
     width: 6px;
-    background: var(--panel-color);
+    background-color: var(--md-background-color);
     cursor: col-resize;
     position: relative;
     user-select: none;
     transition: background-color 0.2s ease;
     touch-action: none;
-    border-left: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-}
-
-.splitter:hover {
-    background: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .splitter::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     width: 2px;
-    height: 30px;
-    background: #444;
-    border-radius: 2px;
+    height: 40px;
+    background-color: var(--md-border-color);
+    border-radius: 1px;
     transition: background-color 0.2s ease;
 }
 
 .splitter:hover::before {
-    background: #fff;
+    background-color: var(--md-primary-color);
 }
 
+/* Dragging state */
 .dragging {
     cursor: col-resize !important;
 }
@@ -41,23 +37,19 @@
     user-select: none;
 }
 
-/* Mobile splitter styles */
-@media screen and (max-width: 768px) {
+/* Mobile (Portrait) */
+@media screen and (max-width: 768px) and (orientation: portrait) {
     .splitter {
         width: 100%;
         height: 6px;
         cursor: row-resize;
-        border-left: none;
-        border-right: none;
-        border-top: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
     }
-    
+
     .splitter::before {
-        width: 30px;
+        width: 40px;
         height: 2px;
     }
-    
+
     .dragging {
         cursor: row-resize !important;
     }
