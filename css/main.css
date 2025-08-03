@@ -199,15 +199,14 @@ html, body {
 }
 
 /* --- iOS Scroll Helper --- */
-#ios-scroll-handle {
-    display: none; /* Hidden by default */
-}
-body.ios-scroll-helper #ios-scroll-handle {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 40px; /* Generous touch area */
-    z-index: 1; /* Below fullscreen button, above content */
+@media screen and (orientation: landscape) {
+    /* Create a scrollable area on iOS landscape to hide the URL bar */
+    body.ios-scroll-helper {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        /* Add a 1px transparent border to the top. This makes the body's content 
+           height slightly larger than the viewport, enabling scrolling. */
+        border-top: 1px solid transparent;
+        box-sizing: border-box;
+    }
 }
