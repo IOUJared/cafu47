@@ -1,6 +1,27 @@
 /*
-  X-Frame-Options: DENY
+  This file defines custom HTTP headers for your Cloudflare Pages site.
+  The headers below provide a strong security baseline while allowing the
+  Twitch embed and your serverless function to work correctly.
+*/
+
+/* The path to apply these headers to. '/*' means all pages. */
+/*
+  # Security-focused headers
+  X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
-  X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://embed.twitch.tv; frame-src https://www.twitch.tv https://embed.twitch.tv; connect-src 'self' https://www.twitch.tv; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;
+
+  # Permissions Policy for embedded features
+  # This explicitly grants the Twitch embed permission to autoplay and go fullscreen.
+  Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv")
+
+  # Content Security Policy (CSP)
+  # This is the most critical part. It whitelists all the domains Twitch needs.
+  Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' https://embed.twitch.tv;
+    style-src 'self' 'unsafe-inline';
+    frame-src 'self' https://player.twitch.tv https://www.twitch.tv;
+    connect-src 'self' https://*.twitch.tv wss://*.twitch.tv https://*.twitchcdn.net https://api.twitch.tv;
+    img-src 'self' data: https://static-cdn.jtvnw.net https://*.twitch.tv;
+    media-src blob: https://*.twitchcdn.net;
