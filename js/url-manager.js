@@ -1,15 +1,15 @@
+import { Utils } from './utils.js';
+
 export class URLManager {
     constructor(defaultChannel) {
         this.defaultChannel = defaultChannel.toLowerCase();
         this.currentChannel = this.defaultChannel;
         this.onChannelChangeCallbacks = [];
         
-        // Listen for hash changes (back/forward navigation)
         window.addEventListener('hashchange', () => {
             this.handleHashChange();
         });
         
-        // Initialize from current URL
         this.initFromURL();
     }
 
@@ -21,8 +21,7 @@ export class URLManager {
         const channelFromHash = this.getChannelFromHash();
         if (channelFromHash && channelFromHash !== this.defaultChannel) {
             this.currentChannel = channelFromHash;
-            // Notify listeners about the initial channel from URL
-            this.notifyChannelChange(channelFromHash, false); // false = don't update URL
+            this.notifyChannelChange(channelFromHash, false);
         }
     }
 
@@ -31,7 +30,16 @@ export class URLManager {
         const twitchPrefix = '#twitch/';
         
         if (hash.startsWith(twitchPrefix)) {
-            const channel = hash.substring(twitchPrefix.length).toLowerCase().trim();
+            // Get the part of the hash after the prefix
+            let channelPart = hash.substring(twitchPrefix.length);
+
+            // **FIX:** Find if a query string is attached to the hash and remove it
+            const queryIndex = channelPart.indexOf('?');
+            if (queryIndex !== -1) {
+                channelPart = channelPart.substring(0, queryIndex);
+            }
+
+            const channel = Utils.normalizeChannel(channelPart);
             return channel || null;
         }
         
@@ -39,15 +47,13 @@ export class URLManager {
     }
 
     updateURL(channel) {
-        const normalizedChannel = channel.toLowerCase();
+        const normalizedChannel = Utils.normalizeChannel(channel);
         
         if (normalizedChannel === this.defaultChannel) {
-            // Remove hash for default channel
             if (window.location.hash) {
                 history.pushState(null, null, window.location.pathname + window.location.search);
             }
         } else {
-            // Set hash for non-default channels
             const newHash = `#twitch/${normalizedChannel}`;
             if (window.location.hash !== newHash) {
                 history.pushState(null, null, newHash);
@@ -61,23 +67,21 @@ export class URLManager {
         const channelFromHash = this.getChannelFromHash();
         
         if (!channelFromHash) {
-            // Hash was removed, switch to default channel
             if (this.currentChannel !== this.defaultChannel) {
                 this.currentChannel = this.defaultChannel;
                 this.notifyChannelChange(this.defaultChannel, false);
             }
-        } else if (channelFromHash !== this.currentChannel) {
-            // Hash changed to different channel
+        } else if (channelFromהash !== this.currentChannel) {
             this.currentChannel = channelFromHash;
             this.notifyChannelChange(channelFromHash, false);
         }
     }
 
     setChannel(channel, updateURL = true) {
-        const normalizedChannel = channel.toLowerCase();
+        const normalizedChannel = Utils.normalizeChannel(channel);
         
         if (normalizedChannel === this.currentChannel) {
-            return; // No change needed
+            return;
         }
         
         this.currentChannel = normalizedChannel;
@@ -97,27 +101,5 @@ export class URLManager {
 
     getCurrentChannel() {
         return this.currentChannel;
-    }
-
-    getDefaultChannel() {
-        return this.defaultChannel;
-    }
-
-    isDefaultChannel(channel = null) {
-        const checkChannel = channel || this.currentChannel;
-        return checkChannel.toLowerCase() === this.defaultChannel;
-    }
-
-    // Get a clean URL without the hash (useful for sharing)
-    getCleanURL() {
-        return window.location.origin + window.location.pathname + window.location.search;
-    }
-
-    // Get the full URL with current channel hash
-    getCurrentURL() {
-        if (this.isDefaultChannel()) {
-            return this.getCleanURL();
-        }
-        return this.getCleanURL() + `#twitch/${this.currentChannel}`;
     }
 }

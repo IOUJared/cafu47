@@ -1,15 +1,18 @@
+/* Cyber Noir Themed Splitter */
 .splitter {
-    width: 8px;
-    background: #333;
+    width: 6px;
+    background: var(--panel-color);
     cursor: col-resize;
     position: relative;
     user-select: none;
     transition: background-color 0.2s ease;
-    touch-action: none; /* Prevent scrolling while dragging */
+    touch-action: none;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
 }
 
 .splitter:hover {
-    background: #555;
+    background: var(--accent-color);
 }
 
 .splitter::before {
@@ -20,8 +23,13 @@
     transform: translate(-50%, -50%);
     width: 2px;
     height: 30px;
-    background: #999;
-    border-radius: 1px;
+    background: #444;
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+}
+
+.splitter:hover::before {
+    background: #fff;
 }
 
 .dragging {
@@ -37,8 +45,12 @@
 @media screen and (max-width: 768px) {
     .splitter {
         width: 100%;
-        height: 8px;
+        height: 6px;
         cursor: row-resize;
+        border-left: none;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
     }
     
     .splitter::before {

@@ -111,13 +111,16 @@ export class TwitchEmbed {
             videoContainer.innerHTML = '';
         }
 
+        // Define all allowed parent domains for the video embed for robustness
+        const allowedDomains = ["cafu47.com", "www.cafu47.com", "cafu47.pages.dev", "localhost"];
+
         this.embed = new Twitch.Embed("twitch-video", {
             width: "100%",
             height: "100%",
             channel: this.config.channel,
             layout: "video",
             autoplay: this.config.video.autoplay,
-            parent: [window.location.hostname]
+            parent: allowedDomains
         });
 
         this._setupVideoEvents();
@@ -171,14 +174,15 @@ export class TwitchEmbed {
         const currentDomain = window.location.hostname;
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
         
-        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}&migration=1`;
+        // **FIX:** Removed the obsolete "&migration=1" parameter from the URL.
+        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}`;
     }
 
     async showChannelSwitcher() {
         if (!this.channelSwitcher) {
             this.channelSwitcher = new ChannelSwitcher(
                 (newChannel) => this.changeChannel(newChannel),
-                this.config.channel // Pass the current channel name
+                this.config.channel
             );
         }
         this.channelSwitcher.updateCurrentChannel(this.config.channel);
