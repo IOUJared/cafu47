@@ -52,9 +52,8 @@
                     </button>
                 </div>
                 <div id="channel-suggestions" class="channel-suggestions">
-                    <span class="suggestion-label">Popular channels:</span>
-                    <div class="suggestions">
-                        </div>
+                    <span class="suggestion-label"></span>
+                    <div class="suggestions"></div>
                 </div>
                 <div class="url-info">
                     <small>💡 URL will update to reflect the current channel</small>
@@ -65,31 +64,7 @@
     
     <script src="https://embed.twitch.tv/embed/v1.js"></script>
     
-    <script src="js/config.js"></script>
+    <script type="module" src="js/app.js"></script>
     
-    <script src="js/mobile-ui-hider.js"></script>
-    
-    <script src="js/url-manager.js"></script>
-    <script src="js/stream-status.js"></script>
-    <script src="js/channel-switcher.js"></script>
-    <script src="js/splitter.js"></script>
-    <script src="js/twitch-embed.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, EFFECTIVE_SHOW_CHAT);
-            twitchEmbed.init();
-            
-            if (EFFECTIVE_SHOW_CHAT) {
-                const splitter = new ResizableSplitter(TWITCH_CONFIG, twitchEmbed);
-            }
-
-            if (IS_MOBILE && !EFFECTIVE_SHOW_CHAT) {
-                document.querySelector('.container').classList.add('mobile-hide-chat');
-            }
-            
-            window.twitchEmbed = twitchEmbed;
-        });
-    </script>
 </body>
 </html>

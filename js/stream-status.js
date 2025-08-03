@@ -1,4 +1,4 @@
-class StreamStatusManager {
+export class StreamStatusManager {
     constructor() {
         this.isOnline = true;
         this.onStatusChangeCallbacks = [];

@@ -1,4 +1,4 @@
-class URLManager {
+export class URLManager {
     constructor(defaultChannel) {
         this.defaultChannel = defaultChannel.toLowerCase();
         this.currentChannel = this.defaultChannel;

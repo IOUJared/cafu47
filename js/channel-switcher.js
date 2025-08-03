@@ -1,4 +1,7 @@
-class ChannelSwitcher {
+import { Utils } from './utils.js';
+import { CONSTANTS } from './constants.js';
+
+export class ChannelSwitcher {
     constructor(onChannelChangeCallback, mainChannel) {
         this.onChannelChange = onChannelChangeCallback;
         this.mainChannel = mainChannel;

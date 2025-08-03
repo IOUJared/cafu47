@@ -1,4 +1,10 @@
-class TwitchEmbed {
+import { CONSTANTS } from './constants.js';
+import { Utils } from './utils.js';
+import { URLManager } from './url-manager.js';
+import { StreamStatusManager } from './stream-status.js';
+import { ChannelSwitcher } from './channel-switcher.js';
+
+export class TwitchEmbed {
     constructor(config, showChat = true) {
         this.config = config;
         this._originalChannel = config.channel.toLowerCase().trim();

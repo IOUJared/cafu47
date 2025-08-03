@@ -1,4 +1,7 @@
-class ResizableSplitter {
+import { Utils } from './utils.js';
+import { CONSTANTS } from './constants.js';
+
+export class ResizableSplitter {
     constructor(config, twitchEmbed) {
         this.config = config;
         this.twitchEmbed = twitchEmbed;

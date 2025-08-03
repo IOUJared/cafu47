@@ -1,7 +1,4 @@
-// Add this to a new file: js/mobile-ui-hider.js
-// Or add to the end of your existing js/config.js
-
-class MobileBrowserUIHider {
+export class MobileBrowserUIHider {
     constructor() {
         this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         this.isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
@@ -121,13 +118,4 @@ class MobileBrowserUIHider {
         window.addEventListener('orientationchange', handleOrientationChange);
         screen.orientation?.addEventListener('change', handleOrientationChange);
     }
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        new MobileBrowserUIHider();
-    });
-} else {
-    new MobileBrowserUIHider();
 }
