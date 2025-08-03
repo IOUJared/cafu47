@@ -200,9 +200,3 @@ html, body {
     .video-wrapper::before { display: none !important; }
     #twitch-video { position: absolute !important; }
 }
-
-/* --- iOS Scroll Helper --- */
-body.ios-scroll-helper .container {
-    /* This makes the container slightly taller than the viewport, forcing it to be scrollable */
-    height: calc(100% + 1px);
-}

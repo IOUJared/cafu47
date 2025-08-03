@@ -41,13 +41,21 @@
 @media screen and (max-width: 768px) and (orientation: portrait) {
     .splitter {
         width: 100%;
-        height: 6px;
+        height: 24px; /* Increased height for a larger touch target */
         cursor: row-resize;
+        /* Add a subtle background to make it look like a handle */
+        background-color: rgba(0, 0, 0, 0.2); 
     }
 
     .splitter::before {
-        width: 40px;
-        height: 2px;
+        /* A classic "grab" indicator */
+        width: 36px;
+        height: 4px;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .splitter:hover::before {
+        background-color: var(--md-primary-color);
     }
 
     .dragging {
