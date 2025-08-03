@@ -1,4 +1,4 @@
-/* css/styles.css */
+/* css/main.css */
 
 /* --- Material Design Theme Variables (Wood Theme) --- */
 :root {
@@ -148,167 +148,6 @@ html, body {
     height: 24px;
 }
 
-/* --- Stream Offline UI --- */
-.stream-offline-ui {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(33, 33, 33, 0.9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px); /* Safari */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.offline-content {
-    background: var(--md-surface-color);
-    border-radius: 8px;
-    padding: 24px;
-    max-width: 450px;
-    width: 90%;
-    text-align: center;
-    box-shadow: var(--md-shadow-3);
-    border-top: 4px solid var(--md-primary-color);
-}
-
-.offline-icon {
-    margin-bottom: 16px;
-    color: var(--md-primary-color);
-}
-
-.offline-content h2 {
-    font-size: 1.75rem;
-    font-weight: 500;
-    margin: 0 0 8px 0;
-    color: var(--md-on-surface-color);
-}
-
-.offline-content p {
-    margin: 0 0 24px 0;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1rem;
-    line-height: 1.5;
-}
-
-.current-channel {
-    color: var(--md-primary-color);
-    font-weight: 600;
-}
-
-.channel-switcher label {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--md-on-surface-color);
-    font-weight: 500;
-    font-size: 1rem;
-    text-align: left;
-}
-
-.input-group {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 16px;
-    position: relative;
-}
-
-.input-group input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid var(--md-border-color);
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--md-on-surface-color);
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.input-group input:focus {
-    border-color: var(--md-primary-color);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 2px rgba(141, 110, 99, 0.3);
-}
-
-.input-group button {
-    padding: 10px 24px;
-    background: var(--md-primary-color);
-    color: var(--md-on-primary-color);
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    box-shadow: var(--md-shadow-1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.input-group button:hover:not(:disabled) {
-    background: var(--md-primary-variant-color);
-    box-shadow: var(--md-shadow-2);
-}
-
-.input-group button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: none;
-}
-
-.channel-suggestions {
-    text-align: left;
-}
-
-.suggestion-label {
-    display: block;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.875rem;
-    margin-bottom: 8px;
-}
-
-.suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-}
-
-.suggestion-btn {
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--md-on-surface-color);
-    border: 1px solid var(--md-border-color);
-    border-radius: 16px;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.suggestion-btn:hover {
-    background: rgba(141, 110, 99, 0.2);
-    border-color: var(--md-primary-color);
-    color: var(--md-on-surface-color);
-}
-
-.error-message {
-    position: absolute;
-    bottom: -22px;
-    left: 0;
-    color: var(--md-error-color);
-    font-size: 0.75rem;
-    padding: 2px 4px;
-}
-
-
 /* --- Animations --- */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -352,10 +191,6 @@ html, body {
     .video-wrapper::before { padding-top: 56.25% !important; }
     .mobile-hide-chat .chat-panel, .mobile-hide-chat .splitter { display: none; }
     .mobile-hide-chat .video-panel { height: 100%; }
-
-    .offline-content { padding: 16px; max-width: 95%; }
-    .offline-content h2 { font-size: 1.5rem; }
-    .input-group { flex-direction: column; gap: 12px; align-items: stretch; }
 }
 
 @media screen and (max-width: 768px) and (orientation: landscape) {
