@@ -175,7 +175,9 @@ export class TwitchEmbed {
         const currentDomain = window.location.hostname;
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
         
-        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}`;
+        const extensionParams = '&enable-frankerfacez=true&enable-bttv=true&enable-7tv=true';
+
+        chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}${extensionParams}`;
     }
 
     async showChannelSwitcher() {
