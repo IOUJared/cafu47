@@ -365,3 +365,8 @@ html, body {
     .video-wrapper::before { display: none !important; }
     #twitch-video { position: absolute !important; }
 }
+
+/* --- iOS Scroll Helper --- */
+body.ios-scroll-helper {
+    padding-top: 1px;
+}
