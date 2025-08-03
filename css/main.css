@@ -69,19 +69,6 @@ html, body {
     pointer-events: none;
 }
 
-.hosting-banner.auto-hide {
-    animation: autoHideBanner 0.5s ease forwards;
-    animation-delay: 7s;
-}
-
-@keyframes autoHideBanner {
-    to {
-        opacity: 0;
-        transform: translateY(-10px);
-        pointer-events: none;
-    }
-}
-
 .hosting-content {
     display: flex;
     align-items: center;
@@ -227,6 +214,22 @@ html, body {
     right: 16px;
     width: 48px;
     height: 48px;
+    transition: all 0.3s ease;
+}
+
+/* When chat is visible, position button on top-left of chat panel */
+.container:not(.chat-hidden) #toggle-chat-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: auto;
+}
+
+/* When chat is hidden, position button on top-right of video panel */
+.chat-hidden #toggle-chat-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
 }
 
 #fullscreen-btn {
@@ -246,21 +249,9 @@ html, body {
 
 /* --- Mobile Layout (Portrait & Landscape) --- */
 @media screen and (max-width: 768px) {
+    /* Hide hosting banner on mobile */
     .hosting-banner {
-        top: 12px;
-        left: 12px;
-        font-size: 0.75rem;
-        padding: 6px 12px;
-        max-width: 160px;
-    }
-    
-    .hosting-content span {
-        font-size: 0.7rem;
-    }
-    
-    .change-channel-btn {
-        font-size: 0.65rem;
-        padding: 3px 6px;
+        display: none !important;
     }
 
     #fullscreen-btn {
@@ -275,6 +266,16 @@ html, body {
         position: fixed; /* Revert to fixed on mobile */
         width: 56px;
         height: 56px;
+    }
+    
+    /* Override chat button positioning on mobile - always fixed bottom left */
+    .container:not(.chat-hidden) #toggle-chat-btn,
+    .chat-hidden #toggle-chat-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        top: auto;
+        right: auto;
     }
 
     /* Hide buttons when in native fullscreen */
