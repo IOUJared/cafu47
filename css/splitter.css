@@ -53,7 +53,7 @@
 /* Mobile (Landscape) */
 @media (max-width: 768px) and (orientation: landscape) {
     .splitter {
-        width: 16px; /* Larger touch area */
+        width: 20px; /* Larger touch area */
         height: 100%;
         cursor: col-resize;
     }
