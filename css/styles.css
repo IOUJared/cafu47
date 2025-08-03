@@ -1,42 +1,39 @@
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* iOS Safari viewport fixes */
-    -webkit-overflow-scrolling: touch;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    /* Ensure full viewport usage on iOS */
-    position: fixed;
-    top: 0;
-    left: 0;
+/* Mobile Browser UI Hiding - CRITICAL for eliminating white space */
+html {
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    height: 100vh;
+    height: 100svh; /* Small viewport height - excludes browser UI */
 }
 
+body {
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: auto;
+    overscroll-behavior: none;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Base Container */
 .container {
     display: flex;
     width: 100vw;
     height: 100vh;
-    /* Use dynamic viewport units for better mobile support */
-    width: 100dvw;
-    height: 100dvh;
-    /* Fallback to viewport units that account for safe areas */
-    width: 100vw;
-    height: 100vh;
-    /* For iOS Safari safe area support */
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    /* Ensure container fills screen edge to edge */
+    width: 100svw;
+    height: 100svh;
     position: fixed;
     top: 0;
     left: 0;
-    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    background: #000;
 }
 
+/* Video Panel */
 .video-panel {
     flex: 1;
     min-width: 300px;
@@ -46,13 +43,14 @@ html, body {
     justify-content: center;
 }
 
+/* Chat Panel */
 .chat-panel {
     width: 350px;
     min-width: 250px;
     background: #000;
 }
 
-/* Video container with aspect ratio */
+/* Video Container */
 .video-container {
     width: 100%;
     height: 100%;
@@ -62,13 +60,12 @@ html, body {
     background: #000;
 }
 
-/* Ensure video wrapper starts with proper aspect ratio immediately */
+/* Video Wrapper with Aspect Ratio */
 .video-wrapper {
     position: relative;
     width: 100%;
     max-width: 100%;
     max-height: 100%;
-    /* Remove any transitions that might cause flashing */
     transition: none;
 }
 
@@ -76,7 +73,7 @@ html, body {
 .video-wrapper::before {
     content: '';
     display: block;
-    padding-top: 56.25%; /* 16:9 aspect ratio (9/16 * 100) */
+    padding-top: 56.25%; /* 16:9 aspect ratio */
 }
 
 #twitch-video {
@@ -85,8 +82,14 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Prevent any loading flashes */
     background: #000;
+}
+
+/* Chat iframe */
+#twitch-chat {
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 /* Video-only mode */
@@ -100,97 +103,50 @@ html, body {
     display: none;
 }
 
-/* When video panel is very wide, center the video with letterboxing */
+/* Desktop aspect ratio adjustments */
 @media screen and (min-aspect-ratio: 16/9) {
     .video-wrapper {
         width: 100%;
-        height: 56.25vw; /* Height based on width for 16:9 */
+        height: 56.25vw;
         max-height: 100vh;
     }
 }
 
-/* When video panel is very tall, fit width and add top/bottom bars */
 @media screen and (max-aspect-ratio: 16/9) {
     .video-wrapper {
-        width: 177.78vh; /* Width based on height for 16:9 */
+        width: 177.78vh;
         height: 100%;
         max-width: 100vw;
     }
 }
 
-#twitch-chat {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* Mobile-specific styles */
+/* MOBILE STYLES */
 @media screen and (max-width: 768px) {
-    /* Remove any potential white bars by ensuring full coverage */
     html, body {
         background: #000 !important;
-        min-height: 100vh;
-        min-height: 100dvh;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
     }
     
     .container {
-        min-height: 100vh;
-        min-height: 100dvh;
         background: #000;
-    }
-    
-    /* Portrait mode - video on top, chat below */
-    .container {
         flex-direction: column;
     }
     
+    /* Portrait mode */
     .video-panel {
         height: 60%;
-        min-width: 100%;
         width: 100% !important;
-        background: #000;
-        /* Extend into safe areas for seamless appearance */
-        margin-left: calc(-1 * env(safe-area-inset-left));
-        margin-right: calc(-1 * env(safe-area-inset-right));
-        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
+        min-width: 100%;
     }
     
     .chat-panel {
         height: 40%;
         width: 100% !important;
         min-width: 100%;
-        background: #000;
     }
     
-    .splitter {
-        width: 100% !important;
-        height: 8px !important;
-        cursor: row-resize !important;
-    }
-    
-    .splitter::before {
-        width: 30px !important;
-        height: 2px !important;
-    }
-    
-    /* Hide chat on very small screens by default */
-    .mobile-hide-chat .chat-panel,
-    .mobile-hide-chat .splitter {
-        display: none;
-    }
-    
-    .mobile-hide-chat .video-panel {
-        height: 100%;
-        /* Extend into safe areas for full-screen video */
-        margin-left: calc(-1 * env(safe-area-inset-left));
-        margin-right: calc(-1 * env(safe-area-inset-right));
-        margin-top: calc(-1 * env(safe-area-inset-top));
-        margin-bottom: calc(-1 * env(safe-area-inset-bottom));
-        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
-        height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
-    }
-    
-    /* On mobile, video wrapper should fill available space */
     .video-wrapper {
         width: 100% !important;
         height: 100% !important;
@@ -199,108 +155,94 @@ html, body {
     .video-wrapper::before {
         padding-top: 56.25% !important;
     }
+    
+    /* Mobile hide chat */
+    .mobile-hide-chat .chat-panel,
+    .mobile-hide-chat .splitter {
+        display: none;
+    }
+    
+    .mobile-hide-chat .video-panel {
+        height: 100%;
+        width: 100%;
+    }
 }
 
-/* Mobile landscape mode - aggressive full screen like Twitch app */
+/* LANDSCAPE MODE - AGGRESSIVE FULL SCREEN */
 @media screen and (max-width: 768px) and (orientation: landscape) {
+    html, body {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
     .container {
+        width: 100dvw !important;
+        height: 100dvh !important;
+        width: 100vw;
+        height: 100vh;
         flex-direction: row !important;
-        /* Extend completely into safe areas for landscape - no padding */
-        margin-left: calc(-1 * env(safe-area-inset-left));
-        margin-right: calc(-1 * env(safe-area-inset-right));
-        margin-top: calc(-1 * env(safe-area-inset-top));
-        margin-bottom: calc(-1 * env(safe-area-inset-bottom));
-        width: calc(100% + env(safe-area-inset-left) + env(safe-area-inset-right));
-        height: calc(100% + env(safe-area-inset-top) + env(safe-area-inset-bottom));
-        /* Remove any padding that creates white space */
         padding: 0 !important;
+        margin: 0 !important;
     }
     
     .video-panel {
         flex: 1 !important;
-        height: 100% !important;
         width: auto !important;
-        min-width: 250px;
-        /* Reset margins for landscape */
-        margin: 0;
-        /* Ensure video panel fills completely */
-        overflow: hidden;
+        height: 100% !important;
+        min-width: 200px;
     }
     
     .chat-panel {
         width: 280px !important;
         height: 100% !important;
         min-width: 180px;
-        /* Ensure chat is within safe area */
-        margin-right: env(safe-area-inset-right);
     }
     
-    .splitter {
-        width: 8px !important;
-        height: 100% !important;
-        cursor: col-resize !important;
-    }
-    
-    .splitter::before {
-        width: 2px !important;
-        height: 30px !important;
-    }
-    
-    /* Video container fills completely with overflow cropping */
-    .video-container {
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        /* Remove any centering that creates gaps */
-        align-items: stretch !important;
-        justify-content: stretch !important;
-    }
-    
-    /* Aggressive video wrapper - fills and overflows if needed */
+    /* Force video to fill completely in landscape */
+    .video-container,
     .video-wrapper {
         width: 100% !important;
         height: 100% !important;
-        /* Allow overflow to eliminate any gaps */
-        overflow: hidden !important;
-        position: relative !important;
     }
     
-    /* Remove the aspect ratio constraint completely in landscape mobile */
     .video-wrapper::before {
         display: none !important;
     }
     
-    /* Video fills completely, crops if necessary - like Twitch app */
     #twitch-video {
         position: absolute !important;
-        top: 50% !important;
-        left: 50% !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        /* Transform to center and ensure full coverage */
-        transform: translate(-50%, -50%) !important;
-        /* Make sure video covers the entire area, cropping if needed */
-        object-fit: cover !important;
-        /* Scale up slightly to ensure no gaps */
-        min-width: 101% !important;
-        min-height: 101% !important;
     }
     
-    /* Hide chat completely in landscape if screen is very narrow */
-    .mobile-hide-chat .chat-panel,
-    .mobile-hide-chat .splitter {
-        display: none !important;
-    }
-    
+    /* Full screen video when chat hidden */
     .mobile-hide-chat .video-panel {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
-        /* Full screen video with complete safe area extension */
-        margin-left: calc(-1 * env(safe-area-inset-left)) !important;
-        margin-right: calc(-1 * env(safe-area-inset-right)) !important;
-        margin-top: calc(-1 * env(safe-area-inset-top)) !important;
-        margin-bottom: calc(-1 * env(safe-area-inset-bottom)) !important;
-        width: calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right)) !important;
-        height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom)) !important;
+        height: 100% !important;
+        z-index: 1 !important;
+    }
+}
+
+/* Narrow landscape screens */
+@media screen and (max-width: 568px) and (orientation: landscape) {
+    .chat-panel {
+        width: 200px !important;
+        min-width: 150px !important;
+    }
+}
+
+/* Very narrow landscape screens */
+@media screen and (max-width: 480px) and (orientation: landscape) {
+    .chat-panel {
+        width: 180px !important;
+        min-width: 120px !important;
     }
 }
 
@@ -315,46 +257,7 @@ html, body {
     }
 }
 
-/* Landscape phones - prioritize video, minimal chat */
-@media screen and (max-width: 568px) and (orientation: landscape) {
-    .chat-panel {
-        width: 200px !important;
-        min-width: 150px !important;
-    }
-    
-    .video-panel {
-        min-width: 200px !important;
-    }
-    
-    /* For very narrow landscape screens, consider auto-hiding chat */
-    .container {
-        /* Even more aggressive full-screen approach */
-        padding: 0 !important;
-        margin: calc(-1 * env(safe-area-inset-top)) calc(-1 * env(safe-area-inset-right)) calc(-1 * env(safe-area-inset-bottom)) calc(-1 * env(safe-area-inset-left)) !important;
-        width: calc(100vw + env(safe-area-inset-left) + env(safe-area-inset-right)) !important;
-        height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom)) !important;
-    }
-}
-
-/* Ultra-wide landscape phones - full immersion */
-@media screen and (max-width: 768px) and (orientation: landscape) and (max-height: 400px) {
-    /* For phones with very wide aspect ratios like iPhone 16 Pro */
-    .chat-panel {
-        width: 180px !important;
-        min-width: 120px !important;
-    }
-    
-    /* Make video even more aggressive */
-    #twitch-video {
-        /* Scale up more to ensure complete coverage */
-        min-width: 102% !important;
-        min-height: 102% !important;
-        /* Slight zoom to eliminate any possible gaps */
-        transform: translate(-50%, -50%) scale(1.01) !important;
-    }
-}
-
-/* Stream offline UI */
+/* STREAM OFFLINE UI */
 .stream-offline-ui {
     position: fixed;
     top: 0;
@@ -550,7 +453,7 @@ html, body {
     }
 }
 
-/* Mobile styles for offline UI */
+/* Mobile offline UI */
 @media screen and (max-width: 768px) {
     .offline-content {
         padding: 1.5rem 1rem;
