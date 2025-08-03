@@ -4,7 +4,6 @@
 # Cloudflare Wrangler local development files
 .wrangler/
 .dev.vars
-wrangler.toml
 
 # Environment variables
 .env
