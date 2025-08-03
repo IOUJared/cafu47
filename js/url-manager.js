@@ -71,7 +71,7 @@ export class URLManager {
                 this.currentChannel = this.defaultChannel;
                 this.notifyChannelChange(this.defaultChannel, false);
             }
-        } else if (channelFromהash !== this.currentChannel) {
+        } else if (channelFromHash !== this.currentChannel) {
             this.currentChannel = channelFromHash;
             this.notifyChannelChange(channelFromHash, false);
         }

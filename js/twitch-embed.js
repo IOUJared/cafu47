@@ -17,6 +17,7 @@ export class TwitchEmbed {
         this.streamStatus = new StreamStatusManager();
         this.channelSwitcher = null;
         this.statusMonitorCleanup = null;
+        this.isHostingFamily = false; // Track if we're hosting a family member
         
         this.urlManager = new URLManager(this.mainChannel);
         
@@ -54,18 +55,48 @@ export class TwitchEmbed {
         if (status === 'offline') {
             await this._handleOfflineState();
         } else {
-            if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
-                this.changeChannel(this.mainChannel, false);
+            // Stream is online
+            const currentChannel = this.config.channel.toLowerCase();
+            
+            // If we're currently hosting a family member and the main channel is back online, switch back
+            if (this.isHostingFamily && currentChannel !== this.mainChannel.toLowerCase()) {
+                // Check if main channel is actually live before switching back
+                await this._checkMainChannelAndSwitch();
+            } else {
+                this.hideChannelSwitcher();
+                // Only hide banner if we're not legitimately hosting a family member
+                if (!this.isHostingFamily) {
+                    this._updateHostingBanner(false);
+                }
             }
-            this.hideChannelSwitcher();
-            this._updateHostingBanner(false);
         }
     }
 
-    // js/twitch-embed.js
+    async _checkMainChannelAndSwitch() {
+        try {
+            const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}`);
+            
+            if (!response.ok) {
+                console.error('Failed to check main channel status');
+                return;
+            }
+            
+            const data = await response.json();
+            
+            if (data.mainChannelLive) {
+                // Main channel is live, switch back
+                this.changeChannel(this.mainChannel, false);
+            }
+        } catch (error) {
+            console.error('Error checking main channel status:', error);
+        }
+    }
 
     async _handleOfflineState() {
-        if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
+        const currentChannel = this.config.channel.toLowerCase();
+        
+        // If we're already showing the channel switcher or not on main/family channel, just show switcher
+        if (currentChannel !== this.mainChannel.toLowerCase() && !this.isHostingFamily) {
             this.showChannelSwitcher();
             return;
         }
@@ -74,18 +105,20 @@ export class TwitchEmbed {
             const familyQuery = TWITCH_CONFIG.fuFamily.join(',');
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&family=${familyQuery}`);
             
-            const responseBody = await response.text(); // Always get the body first
+            const responseBody = await response.text();
 
             if (!response.ok) {
-                // Throw an error with the status and body for better debugging
                 throw new Error(`Server responded with ${response.status}. Body: ${responseBody}`);
             }
             
-            const data = JSON.parse(responseBody); // Now parse the body
+            const data = JSON.parse(responseBody);
 
-            if (data && data.liveFamilyMember) {
-                this.changeChannel(data.liveFamilyMember, true);
+            // Main channel is offline, check for family members
+            if (data.liveFamilyMember) {
+                // Auto-host the live family member
+                this.changeChannel(data.liveFamilyMember.channel, true, data.liveFamilyMember.displayName);
             } else {
+                // No family members live, show channel switcher
                 this.showChannelSwitcher();
             }
         } catch (error) {
@@ -94,10 +127,10 @@ export class TwitchEmbed {
         }
     }
 
-    _updateHostingBanner(isHosting, channel = '') {
+    _updateHostingBanner(isHosting, channelDisplayName = '') {
         if (this.hostingBanner) {
             if (isHosting) {
-                this.hostedChannelSpan.textContent = channel;
+                this.hostedChannelSpan.textContent = channelDisplayName;
                 this.hostingBanner.classList.remove('hidden');
             } else {
                 this.hostingBanner.classList.add('hidden');
@@ -107,7 +140,11 @@ export class TwitchEmbed {
 
     _handleURLChannelChange(channel, fromURLUpdate) {
         if (fromURLUpdate === false) {
-            this.changeChannel(channel, false);
+            // Determine if this is a family member
+            const isFamilyMember = TWITCH_CONFIG.fuFamily.some(fam => 
+                fam.toLowerCase() === channel.toLowerCase()
+            );
+            this.changeChannel(channel, isFamilyMember);
         }
     }
 
@@ -219,13 +256,27 @@ export class TwitchEmbed {
         this.hideChannelSwitcher();
     }
 
-    async changeChannel(newChannel, isAutohost = false) {
+    async changeChannel(newChannel, isAutohost = false, displayName = null) {
         const normalizedChannel = newChannel?.toLowerCase().trim();
         if (!normalizedChannel || normalizedChannel === this.config.channel.toLowerCase()) return;
         
+        // Check if this is a family member
+        const isFamilyMember = TWITCH_CONFIG.fuFamily.some(fam => 
+            fam.toLowerCase() === normalizedChannel
+        );
+        
         this.config.channel = normalizedChannel;
+        this.isHostingFamily = isFamilyMember && isAutohost;
+        
         this.urlManager.setChannel(normalizedChannel, true);
         this.recreateEmbed();
-        this._updateHostingBanner(isAutohost, newChannel);
+        
+        // Show hosting banner if we're auto-hosting a family member
+        if (this.isHostingFamily) {
+            const bannerName = displayName || newChannel;
+            this._updateHostingBanner(true, bannerName);
+        } else {
+            this._updateHostingBanner(false);
+        }
     }
 }

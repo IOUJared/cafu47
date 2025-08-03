@@ -37,6 +37,7 @@ export async function onRequest(context) {
             'Authorization': `Bearer ${accessToken}`,
         };
 
+        // Check if main channel and family channels are live
         const allChannels = [mainChannel, ...familyChannels];
         const streamsQuery = allChannels.map(c => `user_login=${c.trim()}`).join('&');
         
@@ -47,26 +48,45 @@ export async function onRequest(context) {
         }
         
         const streamsData = await streamsResponse.json();
-        const liveUserLogins = new Set(streamsData.data.map(s => s.user_login.toLowerCase()));
+        const liveStreams = streamsData.data || [];
+        
+        // Create a map of live channels
+        const liveChannelsMap = new Map();
+        liveStreams.forEach(stream => {
+            liveChannelsMap.set(stream.user_login.toLowerCase(), {
+                channel: stream.user_login.toLowerCase(),
+                displayName: stream.user_name,
+                gameId: stream.game_id
+            });
+        });
 
-        const mainChannelLive = liveUserLogins.has(mainChannel.toLowerCase());
+        const mainChannelLive = liveChannelsMap.has(mainChannel.toLowerCase());
         let liveFamilyMember = null;
 
-        if (!mainChannelLive) {
+        // If main channel is offline, check for live family members
+        if (!mainChannelLive && familyChannels.length > 0) {
             for (const member of familyChannels) {
-                if (liveUserLogins.has(member.toLowerCase())) {
-                    liveFamilyMember = member;
+                if (liveChannelsMap.has(member.toLowerCase())) {
+                    const liveStream = liveChannelsMap.get(member.toLowerCase());
+                    liveFamilyMember = {
+                        channel: liveStream.channel,
+                        displayName: liveStream.displayName
+                    };
                     break;
                 }
             }
         }
 
-        const userResponse = await fetch(`https://api.twitch.tv/helix/users?login=${mainChannel}`, { headers });
+        // Get suggestions for related live channels
         let suggestions = [];
+        
+        // Get the main channel's info to find related streams
+        const userResponse = await fetch(`https://api.twitch.tv/helix/users?login=${mainChannel}`, { headers });
         if (userResponse.ok) {
             const userData = await userResponse.json();
             const broadcaster = userData.data[0];
             if (broadcaster) {
+                // Get the main channel's current/last game
                 const channelResponse = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcaster.id}`, { headers });
                 let gameId = null;
                 if (channelResponse.ok) {
@@ -76,18 +96,27 @@ export async function onRequest(context) {
                     }
                 }
                 
+                // Get suggestions based on the game or just top English streams
                 const lang = 'language=en';
                 const suggestionUrl = gameId 
-                    ? `https://api.twitch.tv/helix/streams?game_id=${gameId}&${lang}&first=6`
-                    : `https://api.twitch.tv/helix/streams?${lang}&first=6`;
+                    ? `https://api.twitch.tv/helix/streams?game_id=${gameId}&${lang}&first=8`
+                    : `https://api.twitch.tv/helix/streams?${lang}&first=8`;
                 
                 const suggestionsResponse = await fetch(suggestionUrl, { headers });
                 if (suggestionsResponse.ok) {
                     const suggestionsData = await suggestionsResponse.json();
                     suggestions = suggestionsData.data
-                        .filter(s => s.user_login.toLowerCase() !== mainChannel.toLowerCase())
+                        .filter(s => {
+                            const channelName = s.user_login.toLowerCase();
+                            // Filter out main channel and family channels
+                            return channelName !== mainChannel.toLowerCase() && 
+                                   !familyChannels.some(fam => fam.toLowerCase() === channelName);
+                        })
                         .slice(0, 5)
-                        .map(s => ({ channel: s.user_login.toLowerCase(), label: s.user_name }));
+                        .map(s => ({ 
+                            channel: s.user_login.toLowerCase(), 
+                            label: s.user_name 
+                        }));
                 }
             }
         }
@@ -98,7 +127,11 @@ export async function onRequest(context) {
             suggestions
         }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+            },
         });
 
     } catch (error) {
