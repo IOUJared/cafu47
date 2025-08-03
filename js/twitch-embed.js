@@ -172,7 +172,7 @@ class TwitchEmbed {
         if (!this.channelSwitcher) {
             this.channelSwitcher = new ChannelSwitcher(
                 (newChannel) => this.changeChannel(newChannel),
-                TWITCH_CONFIG.channelSwitcher
+                this.config.channel // Pass the current channel name
             );
         }
         this.channelSwitcher.updateCurrentChannel(this.config.channel);

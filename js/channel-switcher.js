@@ -1,7 +1,7 @@
 class ChannelSwitcher {
-    constructor(onChannelChangeCallback, config) {
+    constructor(onChannelChangeCallback, mainChannel) {
         this.onChannelChange = onChannelChangeCallback;
-        this.config = config;
+        this.mainChannel = mainChannel;
         this.isVisible = false;
         
         this._initDOMElements();
@@ -30,22 +30,16 @@ class ChannelSwitcher {
     }
 
     async _loadLiveSuggestions() {
-        if (!this.elements.suggestionsContainer || !this.config?.suggestions) {
-            return;
-        }
+        if (!this.elements.suggestionsContainer) return;
 
-        this.elements.suggestionLabel.textContent = 'Finding live channels...';
+        this.elements.suggestionLabel.textContent = 'Finding related live channels...';
         this.elements.suggestionsContainer.innerHTML = '';
-
-        const staticChannels = this.config.suggestions.map(s => s.channel);
         
         try {
-            // This relative path works for both local dev with Wrangler and production
             const apiEndpoint = 'get-live-streams';
-            const response = await fetch(`${apiEndpoint}?channels=${staticChannels.join(',')}`);
+            const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
             if (!response.ok) {
-                // Provide a more detailed error for easier debugging
                 const errorText = await response.text();
                 throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
             }
@@ -53,17 +47,15 @@ class ChannelSwitcher {
             const liveChannels = await response.json();
 
             if (liveChannels.length > 0) {
-                this.elements.suggestionLabel.textContent = 'Online now:';
+                this.elements.suggestionLabel.textContent = 'Related live channels:';
                 this._populateButtons(liveChannels);
             } else {
-                this.elements.suggestionLabel.textContent = 'No suggested channels are live. Try one of these:';
-                this._populateButtons(this.config.suggestions); // Fallback to static list
+                this.elements.suggestionLabel.textContent = 'Could not find related live channels.';
             }
 
         } catch (error) {
             console.error('Failed to load live channels:', error);
-            this.elements.suggestionLabel.textContent = 'Could not find live channels. Try one of these:';
-            this._populateButtons(this.config.suggestions); // Fallback to static list on error
+            this.elements.suggestionLabel.textContent = 'Could not find related live channels.';
         }
     }
 
@@ -144,6 +136,8 @@ class ChannelSwitcher {
         this.elements.inputGroup.appendChild(errorDiv);
         this.elements.input.focus();
     }
+
+
 
     clearError() {
         if (!this.ui) return;
