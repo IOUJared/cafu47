@@ -5,34 +5,37 @@ import { Utils } from './utils.js';
 import { TwitchEmbed } from './twitch-embed.js';
 import { ResizableSplitter } from './splitter.js';
 import { MobileBrowserUIHider } from './mobile-ui-hider.js';
+import { ChatToggleButton } from './chat-toggle-button.js';
 
-// Determine if chat should be shown based on URL parameters and mobile settings
+// Determine the initial state of the chat from the URL.
 const URLParams = new URLSearchParams(window.location.search);
-const showChatParam = !URLParams.has('nochat');
-const isMobile = Utils.isMobile();
-const effectiveShowChat = showChatParam && (!isMobile || !TWITCH_CONFIG.mobile.hideChat || URLParams.has('chat'));
+const isChatInitiallyVisible = !URLParams.has('nochat');
 
 // Main application initialization logic
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize the main Twitch embed component
-    const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, effectiveShowChat);
+    const isMobile = Utils.isMobile();
+    const container = document.querySelector('.container');
+
+    // Set initial visibility state on the main container.
+    if (!isChatInitiallyVisible) {
+        container.classList.add('chat-hidden');
+    }
+
+    // Initialize the main Twitch embed component.
+    const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, isChatInitiallyVisible);
     twitchEmbed.init();
 
-    // Only initialize the splitter if the chat panel is visible
-    if (effectiveShowChat) {
-        new ResizableSplitter(TWITCH_CONFIG, twitchEmbed);
-    }
+    // Initialize the splitter only if chat is visible initially.
+    const splitter = isChatInitiallyVisible ? new ResizableSplitter(TWITCH_CONFIG, twitchEmbed) : null;
 
-    // Add a specific class for mobile layouts where chat is hidden
-    if (isMobile && !effectiveShowChat) {
-        document.querySelector('.container')?.classList.add('mobile-hide-chat');
-    }
+    // Initialize the chat toggle button for all devices.
+    new ChatToggleButton(twitchEmbed);
 
-    // Initialize the mobile UI hider
+    // Initialize mobile-only UI features.
     if (isMobile) {
         new MobileBrowserUIHider();
     }
 
-    // Make the main embed instance globally accessible for debugging purposes
+    // Make the main embed instance globally accessible for debugging purposes.
     window.twitchEmbed = twitchEmbed;
 });

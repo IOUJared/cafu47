@@ -68,6 +68,13 @@ html, body {
     background: var(--md-background-color);
     border-left: 1px solid var(--md-border-color);
     min-width: 0;
+    position: relative;
+}
+
+/* --- Chat Visibility --- */
+.chat-hidden .chat-panel,
+.chat-hidden .splitter {
+    display: none;
 }
 
 /* --- Video --- */
@@ -108,17 +115,10 @@ html, body {
     border: none;
 }
 
-/* --- Video-Only Mode --- */
-.video-only .chat-panel, .video-only .splitter {
-    display: none;
-}
-
-/* --- Fullscreen Button --- */
-.fullscreen-btn {
-    display: none; /* Hidden by default */
+/* --- UI Buttons --- */
+.ui-btn {
+    display: flex;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
     z-index: 2000;
     width: 56px;
     height: 56px;
@@ -128,31 +128,49 @@ html, body {
     border-radius: 50%;
     box-shadow: var(--md-shadow-3);
     cursor: pointer;
-    transition: transform 0.2s ease-out, background-color 0.2s ease;
+    transition: all 0.2s ease-out;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
-.fullscreen-btn:hover {
+.ui-btn:hover {
     background-color: var(--md-primary-variant-color);
     transform: scale(1.05);
 }
 
-.fullscreen-btn svg {
-    width: 24px;
-    height: 24px;
+.ui-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+#toggle-chat-btn {
+    bottom: 20px;
+    left: 20px;
+}
+
+#fullscreen-btn {
+    right: 20px;
+    bottom: 20px;
+    display: none; /* Hidden by default, shown on mobile */
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* --- Mobile Layout (Portrait & Landscape) --- */
 @media screen and (max-width: 768px) {
-    .fullscreen-btn {
-        display: flex; /* Show on mobile */
-        align-items: center;
-        justify-content: center;
+    #fullscreen-btn {
+        display: flex; /* Show fullscreen button on mobile */
     }
 
-    /* Hide button when in native fullscreen */
-    :fullscreen .fullscreen-btn,
-    :-webkit-full-screen .fullscreen-btn {
-        display: none;
+    /* Hide buttons when in native fullscreen */
+    :fullscreen .ui-btn,
+    :-webkit-full-screen .ui-btn {
+        display: none !important;
     }
     
     .container {
@@ -162,11 +180,6 @@ html, body {
     .chat-panel {
         border-left: none;
         border-top: 1px solid var(--md-border-color);
-    }
-    
-    .mobile-hide-chat .chat-panel, 
-    .mobile-hide-chat .splitter { 
-        display: none; 
     }
 }
 
@@ -178,22 +191,5 @@ html, body {
     .chat-panel {
         border-top: none;
         border-left: 1px solid var(--md-border-color);
-    }
-}
-
-/* --- Animations --- */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
