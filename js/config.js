@@ -32,14 +32,7 @@ const TWITCH_CONFIG = {
     chat: {
         darkMode: true
     },
-    channelSwitcher: {
-        suggestions: [
-            { channel: 'fuslie', label: 'Fuslie' },
-            { channel: 'robcdee', label: 'robcdee' },
-            { channel: 'pokimane', label: 'Pokimane' },
-            { channel: 'sodapoppin', label: 'Sodapoppin' }
-        ]
-    },
+    // The 'channelSwitcher' section has been removed as it is no longer needed.
     splitter: {
         minVideoWidth: 300,
         minChatWidth: 250,
