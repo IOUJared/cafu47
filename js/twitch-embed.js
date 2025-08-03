@@ -67,15 +67,20 @@ export class TwitchEmbed {
             const hostChannel = TWITCH_CONFIG.autohost.host_channel;
             const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&host_channel=${hostChannel}`);
             
-            // **FIX:** Add error handling to prevent JSON parsing errors on server failure.
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
+                throw new Error(`Server returned an error: ${response.status}. Body: ${errorText}`);
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error(`Failed to parse JSON response. Response was: ${responseText}`);
+            }
 
-            if (!data.mainChannelLive && data.hostChannelLive) {
+            if (data && !data.mainChannelLive && data.hostChannelLive) {
                 this.changeChannel(hostChannel, true);
             } else {
                 this.showChannelSwitcher();

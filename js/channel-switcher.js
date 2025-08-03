@@ -42,13 +42,19 @@ export class ChannelSwitcher {
             const apiEndpoint = '/functions/get-live-streams';
             const response = await fetch(`${apiEndpoint}?channel=${this.mainChannel}`);
             
-            // **FIX:** Add error handling to prevent JSON parsing errors on server failure.
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Network response was not ok (${response.status}). Body: ${errorText}`);
+                throw new Error(`Server returned an error: ${response.status}. Body: ${errorText}`);
             }
             
-            const data = await response.json();
+            const responseText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error(`Failed to parse JSON response. Response was: ${responseText}`);
+            }
+
             const liveChannels = data.suggestions;
 
             if (liveChannels && liveChannels.length > 0) {
