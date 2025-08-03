@@ -39,6 +39,50 @@ html, body {
     color: var(--md-on-background-color);
 }
 
+/* --- Hosting Banner --- */
+.hosting-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--md-primary-variant-color);
+    color: var(--md-on-primary-color);
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1001;
+    font-size: 0.9rem;
+    box-shadow: var(--md-shadow-2);
+}
+
+.hosting-banner.hidden {
+    display: none;
+}
+
+.hosting-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.change-channel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--md-on-primary-color);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.change-channel-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
 /* --- Layout Containers --- */
 .container {
     display: flex;
@@ -50,6 +94,11 @@ html, body {
     top: 0;
     left: 0;
     background: var(--md-background-color);
+}
+
+.hosting-banner ~ .container {
+    top: 38px; /* Adjust based on banner height */
+    height: calc(100% - 38px);
 }
 
 .video-panel {
@@ -163,6 +212,16 @@ html, body {
 
 /* --- Mobile Layout (Portrait & Landscape) --- */
 @media screen and (max-width: 768px) {
+    .hosting-banner {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+    .hosting-banner ~ .container {
+        top: 60px;
+        height: calc(100% - 60px);
+    }
+
     #fullscreen-btn {
         display: flex; /* Show fullscreen button on mobile */
     }

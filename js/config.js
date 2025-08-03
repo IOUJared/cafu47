@@ -2,6 +2,10 @@
 
 export const TWITCH_CONFIG = {
     channel: 'fukura____',
+    autohost: {
+        enabled: true,
+        host_channel: 'fuslie'
+    },
     video: {
         autoplay: true,
         quality: 'chunked',

@@ -5,21 +5,30 @@ import { Utils } from './utils.js';
 import { URLManager } from './url-manager.js';
 import { StreamStatusManager } from './stream-status.js';
 import { ChannelSwitcher } from './channel-switcher.js';
+import { TWITCH_CONFIG } from './config.js';
 
 export class TwitchEmbed {
     constructor(config, showChat = true) {
         this.config = config;
-        this._originalChannel = config.channel.toLowerCase().trim();
+        this.mainChannel = config.channel.toLowerCase().trim();
         this.showChat = showChat;
         this.embed = null;
         this.player = null;
         this.streamStatus = new StreamStatusManager();
         this.channelSwitcher = null;
         this.statusMonitorCleanup = null;
+        this.isHosting = false;
         
-        this.urlManager = new URLManager(this._originalChannel);
+        this.urlManager = new URLManager(this.mainChannel);
         
+        this._initDOMElements();
         this._setupEventHandlers();
+    }
+    
+    _initDOMElements() {
+        this.hostingBanner = document.getElementById('hosting-banner');
+        this.hostedChannelSpan = document.getElementById('hosted-channel');
+        this.changeChannelBtn = document.getElementById('change-channel-btn');
     }
 
     _setupEventHandlers() {
@@ -29,17 +38,55 @@ export class TwitchEmbed {
         const debouncedResize = Utils.debounce(() => this.maintainAspectRatio(), 150);
         window.addEventListener('resize', debouncedResize);
         
+        if (this.changeChannelBtn) {
+            this.changeChannelBtn.addEventListener('click', () => this.showChannelSwitcher());
+        }
+        
         const urlChannel = this.urlManager.getCurrentChannel();
-        if (urlChannel !== this._originalChannel) {
+        if (urlChannel !== this.mainChannel) {
             this.config.channel = urlChannel;
         }
     }
 
     async _handleStatusChange(status) {
         if (status === 'offline') {
-            await this.showChannelSwitcher();
+            await this._handleOfflineState();
         } else {
             this.hideChannelSwitcher();
+            this._updateHostingBanner(false);
+        }
+    }
+
+    async _handleOfflineState() {
+        if (!TWITCH_CONFIG.autohost.enabled) {
+            this.showChannelSwitcher();
+            return;
+        }
+        
+        try {
+            const hostChannel = TWITCH_CONFIG.autohost.host_channel;
+            const response = await fetch(`/functions/get-live-streams?channel=${this.mainChannel}&host_channel=${hostChannel}`);
+            const data = await response.json();
+
+            if (!data.mainChannelLive && data.hostChannelLive) {
+                this.changeChannel(hostChannel, true);
+            } else {
+                this.showChannelSwitcher();
+            }
+        } catch (error) {
+            console.error("Could not check for autohost:", error);
+            this.showChannelSwitcher();
+        }
+    }
+
+    _updateHostingBanner(isHosting, channel = '') {
+        if (this.hostingBanner) {
+            if (isHosting) {
+                this.hostedChannelSpan.textContent = channel;
+                this.hostingBanner.classList.remove('hidden');
+            } else {
+                this.hostingBanner.classList.add('hidden');
+            }
         }
     }
 
@@ -58,7 +105,6 @@ export class TwitchEmbed {
             this.createChatEmbed();
         }
         
-        // Increased delay for Safari
         setTimeout(() => this.maintainAspectRatio(), 100); 
     }
 
@@ -94,7 +140,6 @@ export class TwitchEmbed {
         const panelAspectRatio = panelWidth / panelHeight;
         const targetAspectRatio = CONSTANTS.ASPECT_RATIO.TARGET;
 
-        // Reset styles
         videoWrapper.style.width = '100%';
         videoWrapper.style.height = '100%';
 
@@ -174,7 +219,6 @@ export class TwitchEmbed {
 
         const currentDomain = window.location.hostname;
         const darkMode = this.config.chat.darkMode ? '&darkpopout' : '';
-        
         const extensionParams = '&enable-frankerfacez=true&enable-bttv=true&enable-7tv=true';
 
         chatFrame.src = `https://www.twitch.tv/embed/${this.config.channel}/chat?parent=${currentDomain}${darkMode}${extensionParams}`;
@@ -183,7 +227,7 @@ export class TwitchEmbed {
     async showChannelSwitcher() {
         if (!this.channelSwitcher) {
             this.channelSwitcher = new ChannelSwitcher(
-                (newChannel) => this.changeChannel(newChannel),
+                (newChannel) => this.changeChannel(newChannel, false),
                 this.config.channel
             );
         }
@@ -211,7 +255,7 @@ export class TwitchEmbed {
         this.hideChannelSwitcher();
     }
 
-    async changeChannel(newChannel) {
+    async changeChannel(newChannel, isAutohost = false) {
         const normalizedChannel = newChannel?.toLowerCase().trim() || '';
         
         if (!normalizedChannel || normalizedChannel === this.config.channel.toLowerCase()) {
@@ -219,8 +263,15 @@ export class TwitchEmbed {
         }
 
         this.config.channel = normalizedChannel;
-        this.urlManager.setChannel(normalizedChannel, true);
+        
+        if (normalizedChannel !== this.mainChannel) {
+             this.urlManager.setChannel(normalizedChannel, true);
+        } else {
+            this.urlManager.setChannel(this.mainChannel, true);
+        }
+       
         this.recreateEmbed();
+        this._updateHostingBanner(isAutohost, newChannel);
 
         return Promise.resolve();
     }
