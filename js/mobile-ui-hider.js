@@ -1,41 +1,31 @@
 export class MobileBrowserUIHider {
     constructor() {
-        this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        this.isAndroid = /Android/.test(navigator.userAgent);
+        this.fullscreenButton = document.getElementById('fullscreen-btn');
+        this.mainContainer = document.getElementById('main-container');
 
-        if (this.isIOS || this.isAndroid) {
-            this.setupViewport();
+        if (this.fullscreenButton && this.mainContainer) {
             this.setupEventListeners();
-            // Initial hide attempt
-            this.hideUI();
         }
     }
 
-    setupViewport() {
-        const setViewportHeight = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-
-        setViewportHeight();
-        window.addEventListener('resize', setViewportHeight);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(setViewportHeight, 100);
+    setupEventListeners() {
+        this.fullscreenButton.addEventListener('click', () => {
+            this.enterFullscreen();
         });
-    }
 
-    hideUI() {
-        // This is a common trick to hide the address bar on mobile browsers
+        // Also add a fallback for initial scroll hide
         setTimeout(() => {
             window.scrollTo(0, 1);
-        }, 200);
+        }, 300);
     }
 
-    setupEventListeners() {
-        // Attempt to hide the UI on the first touch interaction
-        document.addEventListener('touchstart', () => this.hideUI(), { once: true });
-        
-        // Also hide on orientation change
-        window.addEventListener('orientationchange', () => this.hideUI());
+    enterFullscreen() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (this.mainContainer.requestFullscreen) {
+                this.mainContainer.requestFullscreen();
+            } else if (this.mainContainer.webkitRequestFullscreen) { /* Safari */
+                this.mainContainer.webkitRequestFullscreen();
+            }
+        }
     }
 }
