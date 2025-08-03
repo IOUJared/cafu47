@@ -2,7 +2,7 @@ const TWITCH_CONFIG = {
     channel: 'fukura____',
     // domains array removed - now using current domain automatically
     video: {
-        autoplay: false,
+        autoplay: true,
         quality: 'chunked'
     },
     chat: {
