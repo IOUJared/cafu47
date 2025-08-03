@@ -21,7 +21,7 @@ export async function onRequest(context) {
 
     const url = new URL(request.url);
     const mainChannel = url.searchParams.get('channel');
-    const familyChannels = url.searchParams.get('family')?.split(',') || [];
+    const familyChannels = url.searchParams.get('family')?.split(',').filter(Boolean) || [];
 
     if (!mainChannel) {
         return new Response(JSON.stringify({ error: 'No channel provided.' }), {
@@ -36,7 +36,7 @@ export async function onRequest(context) {
             'Authorization': `Bearer ${accessToken}`,
         };
 
-        const allChannels = [mainChannel, ...familyChannels].filter(Boolean);
+        const allChannels = [mainChannel, ...familyChannels];
         const streamsQuery = allChannels.map(c => `user_login=${c}`).join('&');
         
         const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?${streamsQuery}`, { headers });
@@ -49,7 +49,6 @@ export async function onRequest(context) {
         let liveFamilyMember = null;
 
         if (!mainChannelLive) {
-            // Find the first live family member based on the original list order
             for (const member of familyChannels) {
                 if (liveUserLogins.includes(member.toLowerCase())) {
                     liveFamilyMember = member;
@@ -58,7 +57,6 @@ export async function onRequest(context) {
             }
         }
 
-        // Fetch suggestions
         const userResponse = await fetch(`https://api.twitch.tv/helix/users?login=${mainChannel}`, { headers });
         let suggestions = [];
         if (userResponse.ok) {

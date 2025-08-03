@@ -1,23 +1,13 @@
-/*
-  This file defines custom HTTP headers for your Cloudflare Pages site.
-*/
+# This file defines custom HTTP headers for your Cloudflare Pages site.
+# For more information, see:
+# https://developers.cloudflare.com/pages/platform/headers/
 
-/* The path to apply these headers to. /* means all pages.
-*/
 /*
-  # Security-focused headers
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-
-  # Permissions Policy for embedded features
-  # This version explicitly allows the Twitch player and chat frames to autoplay and go fullscreen.
-*/
-Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv" "https://www.twitch.tv")
-
-  # Content Security Policy (CSP)
-  # This version explicitly adds all the domains that were being blocked in the console logs.
-Content-Security-Policy:
+  Permissions-Policy: autoplay=(self "https://player.twitch.tv"), fullscreen=(self "https://player.twitch.tv" "https://www.twitch.tv")
+  Content-Security-Policy:
     default-src 'self';
     script-src 'self' https://embed.twitch.tv https://static.cloudflareinsights.com https://d2v02itv0y9u9t.cloudfront.net https://sb.scorecardresearch.com https://cdn.frankerfacez.com https://cdn.betterttv.net https://cdn.7tv.app;
     style-src 'self' 'unsafe-inline' https://cdn.frankerfacez.com https://cdn.betterttv.net https://cdn.7tv.app;

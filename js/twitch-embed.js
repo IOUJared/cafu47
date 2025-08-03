@@ -54,7 +54,6 @@ export class TwitchEmbed {
         if (status === 'offline') {
             await this._handleOfflineState();
         } else {
-            // If the stream comes online, ensure we are on the main channel
             if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
                 this.changeChannel(this.mainChannel, false);
             }
@@ -64,7 +63,6 @@ export class TwitchEmbed {
     }
 
     async _handleOfflineState() {
-        // Only check for hosts if we are currently on the main channel
         if (this.config.channel.toLowerCase() !== this.mainChannel.toLowerCase()) {
             this.showChannelSwitcher();
             return;
@@ -94,7 +92,7 @@ export class TwitchEmbed {
             }
         } catch (error) {
             console.error("Could not check for Fu's Family host:", error);
-            this.showChannelSwitcher(); // Fallback to offline UI on error
+            this.showChannelSwitcher();
         }
     }
 
