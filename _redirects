@@ -1,11 +1,8 @@
 # _redirects
 
-# Static assets first (most specific)
-/css/* /css/:splat 200
-/js/* /js/:splat 200
-
-# API functions should be handled by Cloudflare Functions
+# API functions first (most specific)
 /functions/get-live-streams /functions/get-live-streams 200
 
-# SPA fallback for everything else (least specific)
-/* /index.html 200
+# Static assets
+/css/* /css/:splat 200
+/js/* /js/:splat 200
