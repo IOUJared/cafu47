@@ -4,8 +4,14 @@ export class MobileBrowserUIHider {
         this.mainContainer = document.getElementById('main-container');
         this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-        if (this.fullscreenButton && this.mainContainer && !this.isIOS) {
-            this.setupEventListeners();
+        if (this.fullscreenButton) {
+            if (this.isIOS) {
+                // Fullscreen API is not supported on iOS, so remove the button.
+                this.fullscreenButton.remove();
+            } else if (this.mainContainer) {
+                // Setup for non-iOS (Android)
+                this.setupEventListeners();
+            }
         }
     }
 

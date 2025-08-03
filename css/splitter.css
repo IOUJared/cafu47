@@ -53,13 +53,13 @@
 /* Mobile (Landscape) */
 @media (max-width: 768px) and (orientation: landscape) {
     .splitter {
-        width: 20px; /* Larger touch area */
+        width: 24px; /* Even larger touch area */
         height: 100%;
         cursor: col-resize;
     }
     .splitter::before {
-        width: 4px;
-        height: 40px;
+        width: 6px; /* Thicker handle */
+        height: 50px;
     }
 }
 
