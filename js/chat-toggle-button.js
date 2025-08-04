@@ -1,11 +1,14 @@
 /**
  * Manages the button for toggling chat visibility without a page reload.
+ * Updated to properly position button in chat panel when chat is visible.
  */
 export class ChatToggleButton {
     constructor(twitchEmbed) {
         this.twitchEmbed = twitchEmbed;
         this.button = document.getElementById('toggle-chat-btn');
         this.container = document.getElementById('main-container');
+        this.videoPanel = document.querySelector('.video-panel');
+        this.chatPanel = document.querySelector('.chat-panel');
         
         if (this.button) {
             this.init();
@@ -17,7 +20,34 @@ export class ChatToggleButton {
      */
     init() {
         this.updateIcon();
+        this.updateButtonPosition();
         this.button.addEventListener('click', () => this.toggleChat());
+    }
+
+    /**
+     * Updates the button's position based on chat visibility.
+     */
+    updateButtonPosition() {
+        const isChatHidden = this.container.classList.contains('chat-hidden');
+        const isMobile = window.innerWidth <= 768;
+        
+        // On mobile, button stays fixed positioned
+        if (isMobile) {
+            return;
+        }
+        
+        // Move button to appropriate parent
+        if (isChatHidden) {
+            // Chat is hidden, button goes in video panel (top-right)
+            if (this.button.parentNode !== this.videoPanel) {
+                this.videoPanel.appendChild(this.button);
+            }
+        } else {
+            // Chat is visible, button goes in chat panel (top-left)
+            if (this.button.parentNode !== this.chatPanel) {
+                this.chatPanel.appendChild(this.button);
+            }
+        }
     }
 
     /**
@@ -38,6 +68,7 @@ export class ChatToggleButton {
     toggleChat() {
         this.container.classList.toggle('chat-hidden');
         this.updateIcon();
+        this.updateButtonPosition();
         
         const url = new URL(window.location);
         if (this.container.classList.contains('chat-hidden')) {
