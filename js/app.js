@@ -1,8 +1,8 @@
-// js/app.js
+// js/app.js - Updated to use the new EmbedManager
 
 import { TWITCH_CONFIG } from './config.js';
 import { Utils } from './utils.js';
-import { TwitchEmbed } from './twitch-embed.js';
+import { EmbedManager } from './embed-manager.js';
 import { ResizableSplitter } from './splitter.js';
 import { MobileBrowserUIHider } from './mobile-ui-hider.js';
 import { ChatToggleButton } from './chat-toggle-button.js';
@@ -21,15 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.add('chat-hidden');
     }
 
-    // Initialize the main Twitch embed component.
-    const twitchEmbed = new TwitchEmbed(TWITCH_CONFIG, isChatInitiallyVisible);
-    twitchEmbed.init();
+    // Initialize the main embed manager component.
+    const embedManager = new EmbedManager(TWITCH_CONFIG, isChatInitiallyVisible);
+    embedManager.init();
 
     // Initialize the splitter only if chat is visible initially.
-    const splitter = isChatInitiallyVisible ? new ResizableSplitter(TWITCH_CONFIG, twitchEmbed) : null;
+    const splitter = isChatInitiallyVisible ? new ResizableSplitter(TWITCH_CONFIG, embedManager) : null;
 
     // Initialize the chat toggle button for all devices.
-    new ChatToggleButton(twitchEmbed);
+    new ChatToggleButton(embedManager);
 
     // Initialize mobile-only UI features.
     if (isMobile) {
@@ -37,5 +37,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Make the main embed instance globally accessible for debugging purposes.
-    window.twitchEmbed = twitchEmbed;
+    window.embedManager = embedManager;
 });

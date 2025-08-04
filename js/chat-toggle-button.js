@@ -1,10 +1,12 @@
+// js/chat-toggle-button.js - Updated for EmbedManager compatibility
+
 /**
  * Manages the button for toggling chat visibility with Twitch-style design.
- * Updated to use more subtle icons and positioning that blends with Twitch's UI.
+ * Updated to work with the new EmbedManager architecture.
  */
 export class ChatToggleButton {
-    constructor(twitchEmbed) {
-        this.twitchEmbed = twitchEmbed;
+    constructor(embedManager) {
+        this.embedManager = embedManager;
         this.button = document.getElementById('toggle-chat-btn');
         this.container = document.getElementById('main-container');
         this.videoPanel = document.querySelector('.video-panel');
@@ -72,22 +74,7 @@ export class ChatToggleButton {
     updateIcon() {
         const isChatHidden = this.container.classList.contains('chat-hidden');
         
-        // More subtle, Twitch-style icons
-        const showChatIcon = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2h-3l-3 3-3-3H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm0 2v10h3l2 2 2-2h9V6H4z"/>
-                <path d="M7 9h2v2H7V9zm4 0h2v2h-2V9zm4 0h2v2h-2V9z"/>
-            </svg>
-        `;
-        
-        const hideChatIcon = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                <path d="M8 11h8v2H8v-2z"/>
-            </svg>
-        `;
-        
-        // Even more subtle - use simple chevron/arrow icons
+        // Simple chevron/arrow icons for showing/hiding chat
         const showIcon = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
@@ -122,8 +109,8 @@ export class ChatToggleButton {
         history.pushState({}, '', url);
 
         requestAnimationFrame(() => {
-            if (this.twitchEmbed) {
-                this.twitchEmbed.maintainAspectRatio();
+            if (this.embedManager) {
+                this.embedManager.maintainAspectRatio();
             }
         });
     }

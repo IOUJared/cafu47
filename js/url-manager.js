@@ -1,9 +1,12 @@
+// js/url-manager.js - Updated to support both Twitch and YouTube
+
 import { Utils } from './utils.js';
 
 export class URLManager {
     constructor(defaultChannel) {
         this.defaultChannel = defaultChannel.toLowerCase();
         this.currentChannel = this.defaultChannel;
+        this.currentPlatform = 'twitch'; // Default platform
         this.onChannelChangeCallbacks = [];
         
         window.addEventListener('hashchange', () => {
@@ -18,88 +21,111 @@ export class URLManager {
     }
 
     initFromURL() {
-        const channelFromHash = this.getChannelFromHash();
-        if (channelFromHash && channelFromHash !== this.defaultChannel) {
-            this.currentChannel = channelFromHash;
-            this.notifyChannelChange(channelFromHash, false);
+        const contentFromHash = this.getContentFromHash();
+        if (contentFromHash && (contentFromHash.id !== this.defaultChannel || contentFromHash.platform !== 'twitch')) {
+            this.currentChannel = contentFromHash.id;
+            this.currentPlatform = contentFromHash.platform;
+            this.notifyChannelChange(contentFromHash.id, contentFromHash.platform, false);
         }
     }
 
-    getChannelFromHash() {
+    getContentFromHash() {
         const hash = window.location.hash;
         const twitchPrefix = '#twitch/';
+        const youtubePrefix = '#youtube/';
         
         if (hash.startsWith(twitchPrefix)) {
-            // Get the part of the hash after the prefix
             let channelPart = hash.substring(twitchPrefix.length);
-
-            // **FIX:** Find if a query string is attached to the hash and remove it
             const queryIndex = channelPart.indexOf('?');
             if (queryIndex !== -1) {
                 channelPart = channelPart.substring(0, queryIndex);
             }
-
             const channel = Utils.normalizeChannel(channelPart);
-            return channel || null;
+            return channel ? { platform: 'twitch', id: channel } : null;
+        } else if (hash.startsWith(youtubePrefix)) {
+            let videoPart = hash.substring(youtubePrefix.length);
+            const queryIndex = videoPart.indexOf('?');
+            if (queryIndex !== -1) {
+                videoPart = videoPart.substring(0, queryIndex);
+            }
+            const videoId = videoPart.trim();
+            return videoId ? { platform: 'youtube', id: videoId } : null;
         }
         
         return null;
     }
 
-    updateURL(channel) {
-        const normalizedChannel = Utils.normalizeChannel(channel);
-        
-        if (normalizedChannel === this.defaultChannel) {
-            if (window.location.hash) {
-                history.pushState(null, null, window.location.pathname + window.location.search);
+    updateURL(id, platform = 'twitch') {
+        if (platform === 'twitch') {
+            const normalizedChannel = Utils.normalizeChannel(id);
+            
+            if (normalizedChannel === this.defaultChannel && platform === 'twitch') {
+                if (window.location.hash) {
+                    history.pushState(null, null, window.location.pathname + window.location.search);
+                }
+            } else {
+                const newHash = `#twitch/${normalizedChannel}`;
+                if (window.location.hash !== newHash) {
+                    history.pushState(null, null, newHash);
+                }
             }
-        } else {
-            const newHash = `#twitch/${normalizedChannel}`;
+            
+            this.currentChannel = normalizedChannel;
+        } else if (platform === 'youtube') {
+            const newHash = `#youtube/${id}`;
             if (window.location.hash !== newHash) {
                 history.pushState(null, null, newHash);
             }
+            this.currentChannel = id;
         }
         
-        this.currentChannel = normalizedChannel;
+        this.currentPlatform = platform;
     }
 
     handleHashChange() {
-        const channelFromHash = this.getChannelFromHash();
+        const contentFromHash = this.getContentFromHash();
         
-        if (!channelFromHash) {
-            if (this.currentChannel !== this.defaultChannel) {
+        if (!contentFromHash) {
+            if (this.currentChannel !== this.defaultChannel || this.currentPlatform !== 'twitch') {
                 this.currentChannel = this.defaultChannel;
-                this.notifyChannelChange(this.defaultChannel, false);
+                this.currentPlatform = 'twitch';
+                this.notifyChannelChange(this.defaultChannel, 'twitch', false);
             }
-        } else if (channelFromHash !== this.currentChannel) {
-            this.currentChannel = channelFromHash;
-            this.notifyChannelChange(channelFromHash, false);
+        } else if (contentFromHash.id !== this.currentChannel || contentFromHash.platform !== this.currentPlatform) {
+            this.currentChannel = contentFromHash.id;
+            this.currentPlatform = contentFromHash.platform;
+            this.notifyChannelChange(contentFromHash.id, contentFromHash.platform, false);
         }
     }
 
-    setChannel(channel, updateURL = true) {
-        const normalizedChannel = Utils.normalizeChannel(channel);
+    setChannel(id, platform = 'twitch', updateURL = true) {
+        const normalizedId = platform === 'twitch' ? Utils.normalizeChannel(id) : id;
         
-        if (normalizedChannel === this.currentChannel) {
+        if (normalizedId === this.currentChannel && platform === this.currentPlatform) {
             return;
         }
         
-        this.currentChannel = normalizedChannel;
+        this.currentChannel = normalizedId;
+        this.currentPlatform = platform;
         
         if (updateURL) {
-            this.updateURL(normalizedChannel);
+            this.updateURL(normalizedId, platform);
         }
         
-        this.notifyChannelChange(normalizedChannel, updateURL);
+        this.notifyChannelChange(normalizedId, platform, updateURL);
     }
 
-    notifyChannelChange(channel, fromURLUpdate) {
+    notifyChannelChange(id, platform, fromURLUpdate) {
         this.onChannelChangeCallbacks.forEach(callback => {
-            callback(channel, fromURLUpdate);
+            callback(id, platform, fromURLUpdate);
         });
     }
 
     getCurrentChannel() {
         return this.currentChannel;
+    }
+
+    getCurrentPlatform() {
+        return this.currentPlatform;
     }
 }
