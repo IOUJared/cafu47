@@ -1,9 +1,127 @@
-/* Complete fix for css/main.css - Chat Toggle Button Positioning */
+/* css/main.css */
 
-/* Ensure both panels have relative positioning for button placement */
+/* --- Material Design Theme Variables (Wood Theme) --- */
+:root {
+    --md-primary-color: #8D6E63; /* Wood Brown */
+    --md-primary-variant-color: #5D4037; /* Darker Wood Brown */
+    --md-secondary-color: #FFB74D; /* Amber Accent */
+    --md-background-color: #212121; /* Dark background for contrast */
+    --md-surface-color: #2c2c2c; /* Slightly lighter surface */
+    --md-error-color: #EF5350; /* Material Red */
+    
+    --md-on-primary-color: #FFFFFF;
+    --md-on-secondary-color: #000000;
+    --md-on-background-color: #FFFFFF;
+    --md-on-surface-color: #E1E1E1;
+    
+    --md-border-color: rgba(255, 255, 255, 0.12);
+
+    /* Typography */
+    --md-font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    /* Shadows */
+    --md-shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --md-shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --md-shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+/* --- Base Styles --- */
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+    font-family: var(--md-font-family);
+    background-color: var(--md-background-color);
+    color: var(--md-on-background-color);
+}
+
+/* --- Hosting Banner (New Circular Design) --- */
+.hosting-banner {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(141, 110, 99, 0.95);
+    color: var(--md-on-primary-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    z-index: 1001;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: var(--md-shadow-2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.hosting-banner.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.hosting-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.hosting-content svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.hosting-content span {
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.change-channel-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--md-on-primary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.change-channel-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* --- Layout Containers --- */
+.container {
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--md-background-color);
+}
+
 .video-panel {
     flex: 1 1 auto;
-    min-width: 0;
+    min-width: 0; /* Flexbox fix for shrinking */
     background: #000;
     display: flex;
     align-items: center;
@@ -20,7 +138,77 @@
     position: relative;
 }
 
-/* Base button styles */
+/* --- Chat Visibility --- */
+.chat-hidden .chat-panel,
+.chat-hidden .splitter {
+    display: none;
+}
+
+/* --- Video --- */
+.video-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.video-wrapper::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+#twitch-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+#twitch-chat {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* --- UI Buttons --- */
+.ui-btn {
+    display: flex;
+    z-index: 2000;
+    background-color: var(--md-primary-color);
+    color: var(--md-on-primary-color);
+    border: none;
+    border-radius: 50%;
+    box-shadow: var(--md-shadow-3);
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.ui-btn:hover {
+    background-color: var(--md-primary-variant-color);
+    transform: scale(1.05);
+}
+
+.ui-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+/* Chat Toggle Button Positioning */
 #toggle-chat-btn {
     position: absolute;
     width: 48px;
@@ -41,8 +229,32 @@
     left: 16px;
 }
 
-/* Mobile overrides - buttons always fixed positioned on mobile */
+#fullscreen-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 56px;
+    height: 56px;
+    display: none; /* Hidden by default, shown on mobile */
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- Mobile Layout (Portrait & Landscape) --- */
 @media screen and (max-width: 768px) {
+    /* Hide hosting banner on mobile */
+    .hosting-banner {
+        display: none !important;
+    }
+
+    #fullscreen-btn {
+        display: flex; /* Show fullscreen button on mobile */
+    }
+    
     #toggle-chat-btn {
         position: fixed !important;
         bottom: 20px;
@@ -51,5 +263,37 @@
         right: auto !important;
         width: 56px;
         height: 56px;
+    }
+
+    /* Hide buttons when in native fullscreen */
+    :fullscreen .ui-btn,
+    :-webkit-full-screen .ui-btn {
+        display: none !important;
+    }
+    
+    /* Hide hosting banner when in fullscreen */
+    :fullscreen .hosting-banner,
+    :-webkit-full-screen .hosting-banner {
+        display: none !important;
+    }
+    
+    .container {
+        flex-direction: column; /* Portrait layout */
+    }
+    
+    .chat-panel {
+        border-left: none;
+        border-top: 1px solid var(--md-border-color);
+    }
+}
+
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .container {
+        flex-direction: row; /* Landscape layout */
+    }
+
+    .chat-panel {
+        border-top: none;
+        border-left: 1px solid var(--md-border-color);
     }
 }
