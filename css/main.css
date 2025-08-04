@@ -251,10 +251,10 @@ html, body {
     right: 12px;
 }
 
-/* When in chat panel (chat visible), position top-right inside chat */
+/* When in chat panel (chat visible), position top-left inside chat */
 .chat-panel #toggle-chat-btn {
     top: 8px;
-    right: 8px;
+    left: 8px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
